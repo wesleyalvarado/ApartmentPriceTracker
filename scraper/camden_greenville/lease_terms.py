@@ -31,7 +31,7 @@ from bs4 import BeautifulSoup
 DESIRED_TERMS   = [4, 5, 6, 14]
 COMMUNITY_ID    = 4877024            # Camden Greenville RealPage community ID
 COMPLEX_ID      = 1                  # Camden Greenville — see complexes table
-ROOT            = Path(__file__).parent.parent
+ROOT            = Path(__file__).parent.parent.parent  # AptPricing/
 DB_PATH         = ROOT / "data" / "camden_prices.db"
 SNAPSHOTS_DIR   = ROOT / "data" / "snapshots"
 

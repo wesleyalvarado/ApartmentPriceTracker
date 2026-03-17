@@ -26,7 +26,7 @@ env/
 .pytest_cache/
 
 # Saved HTML fixtures (real website data)
-scraper/fixtures/
+scraper/camden_greenville/fixtures/
 
 # ── Rust ─────────────────────────────────────────────────────────────────────
 target/

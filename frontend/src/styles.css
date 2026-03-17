@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* ── PrimeNG base ─────────────────────────────────────────────────────────── */
+@layer primeng;
+
+/* ── Camden brand tokens ─────────────────────────────────────────────────── */
+:root {
+  --camden-green:       #2B5741;
+  --camden-green-light: #3E7A5A;
+  --camden-green-pale:  #EAF2ED;
+  --camden-gold:        #C8A84B;
+  --camden-bg:          #F5F7F6;
+  --camden-surface:     #FFFFFF;
+  --camden-text:        #1A2E22;
+  --camden-muted:       #6B7E73;
+  --camden-border:      #D4E0D8;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+body {
+  background-color: var(--camden-bg);
+  color: var(--camden-text);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  margin: 0;
+}
+
+/* ── PrimeNG overrides scoped to Camden palette ───────────────────────────── */
+.p-card {
+  border: 1px solid var(--camden-border);
+  border-radius: 12px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+  transition: box-shadow .2s, transform .2s;
+  cursor: pointer;
+}
+.p-card:hover {
+  box-shadow: 0 4px 16px rgba(43,87,65,.15) !important;
+  transform: translateY(-2px);
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: var(--camden-green-pale);
+  color: var(--camden-green);
+  font-weight: 600;
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.p-button.p-button-success,
+.btn-primary {
+  background: var(--camden-green) !important;
+  border-color: var(--camden-green) !important;
+}
+.p-button.p-button-success:hover {
+  background: var(--camden-green-light) !important;
+}
+
+.p-selectbutton .p-button.p-highlight {
+  background: var(--camden-green) !important;
+  border-color: var(--camden-green) !important;
+  color: white !important;
+}

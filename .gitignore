@@ -1,0 +1,49 @@
+# ── Private docs ─────────────────────────────────────────────────────────────
+SPEC.md
+PROGRESS.md
+
+# ── Scraped data (generated, not for repo) ───────────────────────────────────
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/*.csv
+data/snapshots/
+
+# Keep the directory structure
+!data/.gitkeep
+!data/snapshots/.gitkeep
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Saved HTML fixtures (real website data)
+scraper/fixtures/
+
+# ── Rust ─────────────────────────────────────────────────────────────────────
+target/
+
+# ── Node / Angular ───────────────────────────────────────────────────────────
+node_modules/
+dist/
+.angular/
+
+# Old global stylesheet (replaced by styles.css for Tailwind v4 compatibility)
+frontend/src/styles.scss
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp

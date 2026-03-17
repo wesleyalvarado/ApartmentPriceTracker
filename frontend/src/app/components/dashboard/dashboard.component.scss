@@ -32,6 +32,7 @@
   font-weight: 800;
   font-size: 1rem;
   letter-spacing: .02em;
+  flex-shrink: 0;
 }
 .header-title {
   font-size: 1.1rem;
@@ -49,6 +50,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .header { padding: 0 1rem; }
+  .header-meta { display: none; }
 }
 
 /* ── Stats bar ───────────────────────────────────────────────────────────── */
@@ -58,6 +65,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 0;
   padding: 0;
 }
@@ -83,11 +91,27 @@
   background: var(--camden-border);
 }
 
+@media (max-width: 600px) {
+  .stat-item { padding: .75rem 0; width: 50%; }
+  .stat-divider { display: none; }
+  .stats-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: .25rem 0;
+    gap: 0;
+  }
+  .stat-value { font-size: 1.2rem; }
+}
+
 /* ── Main ────────────────────────────────────────────────────────────────── */
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem 1.5rem 3rem;
+}
+
+@media (max-width: 600px) {
+  .main-content { padding: 1rem .75rem 3rem; }
 }
 
 /* ── Filters ─────────────────────────────────────────────────────────────── */
@@ -131,11 +155,39 @@
   align-self: flex-end;
 }
 
+@media (max-width: 600px) {
+  .filters-panel {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .filters-body { gap: 1rem; }
+  .filter-count-badge { align-self: flex-start; }
+
+  /* Let wide button groups scroll rather than overflow */
+  :host ::ng-deep .filter-group .p-selectbutton {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+}
+
 /* ── Cards grid ──────────────────────────────────────────────────────────── */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: .85rem;
+  }
 }
 
 .card-wrapper {
@@ -298,6 +350,18 @@
   background: var(--camden-green-pale);
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+/* ── Floor plan image ────────────────────────────────────────────────────── */
+.floorplan-image-section { margin-bottom: 1rem; }
+.floorplan-img {
+  display: block;
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: var(--camden-green-pale);
+  padding: .5rem;
 }
 
 .unit-id-cell { font-weight: 600; }

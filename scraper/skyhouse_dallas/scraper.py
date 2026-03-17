@@ -90,8 +90,8 @@ def upsert_floorplan_meta(conn: sqlite3.Connection, complex_id: int, fp: dict, t
         """
         INSERT OR REPLACE INTO floorplan_meta
             (complex_id, floorplan_name, floorplan_slug, floor,
-             bedrooms, bathrooms, sqft, special_tags, last_updated)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+             bedrooms, bathrooms, sqft, special_tags, image_url, last_updated)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             complex_id,
@@ -102,6 +102,7 @@ def upsert_floorplan_meta(conn: sqlite3.Connection, complex_id: int, fp: dict, t
             fp["baths"],
             fp["sqft"],
             None,
+            fp.get("image_url"),
             ts,
         ),
     )
@@ -167,10 +168,13 @@ def parse_community_plans(html: str) -> dict:
     result = {}
     for p in plans:
         name = p.get("Name", "")
+        layouts = p.get("Layouts") or []
+        image_url = layouts[0].get("ImageURL") if layouts else None
         result[name] = {
             "beds": int(p.get("NumBeds", 0)),
             "baths": float(p.get("NumBaths", 1)),
             "sqft": int(p.get("MinSqFt", 0)),
+            "image_url": image_url,
         }
     log.info("Parsed %d floor plans from communityPlans", len(result))
     return result

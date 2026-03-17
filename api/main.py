@@ -158,19 +158,30 @@ def get_floorplans(
     """
     with get_db() as conn:
         if lease_term and lease_term != 15:
-            lt_ts = _latest_lease_term_ts(conn, lease_term, complex_id)
-            if not lt_ts:
+            # Verify at least one complex has this lease term
+            check_filter = "AND complex_id = ?" if complex_id else ""
+            check_params = (lease_term, complex_id) if complex_id else (lease_term,)
+            exists = conn.execute(
+                f"SELECT 1 FROM lease_term_prices WHERE lease_months=? {check_filter} LIMIT 1",
+                check_params,
+            ).fetchone()
+            if not exists:
                 raise HTTPException(
                     status_code=404,
                     detail=f"No lease term data for {lease_term} months. Run lease_terms.py first.",
                 )
-            # Use CTE to get per-complex latest snapshot for metadata
             complex_filter = "AND ltp.complex_id = :cid" if complex_id else ""
             rows = conn.execute(
                 f"""
                 WITH latest_snap AS (
                     SELECT complex_id, MAX(scraped_at) AS ts
                     FROM price_snapshots
+                    GROUP BY complex_id
+                ),
+                latest_lt AS (
+                    SELECT complex_id, MAX(scraped_at) AS ts
+                    FROM lease_term_prices
+                    WHERE lease_months = :term
                     GROUP BY complex_id
                 )
                 SELECT
@@ -187,8 +198,10 @@ def get_floorplans(
                     ROUND(AVG(ltp.monthly_rent))  AS avg_price,
                     COALESCE(NULLIF(MIN(ltp.move_in_date), ''), MIN(ps.available_date)) AS earliest_available,
                     ps.special_tags,
-                    ltp.scraped_at
+                    ltp.scraped_at,
+                    fm.image_url
                 FROM lease_term_prices ltp
+                JOIN latest_lt ll ON ll.complex_id = ltp.complex_id AND ll.ts = ltp.scraped_at
                 JOIN complexes c ON c.id = ltp.complex_id
                 JOIN (
                     SELECT ps2.complex_id, ps2.floorplan_name, ps2.floorplan_slug,
@@ -198,12 +211,13 @@ def get_floorplans(
                     JOIN latest_snap ls ON ls.complex_id = ps2.complex_id AND ls.ts = ps2.scraped_at
                     GROUP BY ps2.complex_id, ps2.floorplan_name
                 ) ps ON ps.complex_id = ltp.complex_id AND ps.floorplan_name = ltp.floorplan_name
-                WHERE ltp.scraped_at = :lt_ts AND ltp.lease_months = :term
+                LEFT JOIN floorplan_meta fm ON fm.complex_id = ltp.complex_id AND fm.floorplan_name = ltp.floorplan_name
+                WHERE ltp.lease_months = :term
                   {complex_filter}
                 GROUP BY ltp.complex_id, ltp.floorplan_name
                 ORDER BY ltp.complex_id, min_price ASC
                 """,
-                {"lt_ts": lt_ts, "term": lease_term, "cid": complex_id},
+                {"term": lease_term, "cid": complex_id},
             ).fetchall()
         else:
             complex_filter = "AND ps.complex_id = :cid" if complex_id else ""
@@ -228,11 +242,17 @@ def get_floorplans(
                     ROUND(AVG(ps.price))       AS avg_price,
                     MIN(ps.available_date)     AS earliest_available,
                     ps.special_tags,
-                    l.ts                       AS scraped_at
+                    l.ts                       AS scraped_at,
+                    fm.image_url
                 FROM price_snapshots ps
                 JOIN latest l ON l.complex_id = ps.complex_id AND l.ts = ps.scraped_at
                 JOIN complexes c ON c.id = ps.complex_id
+                LEFT JOIN floorplan_meta fm ON fm.complex_id = ps.complex_id AND fm.floorplan_name = ps.floorplan_name
                 WHERE 1=1 {complex_filter}
+                  AND (
+                    NOT EXISTS (SELECT 1 FROM lease_term_prices ltp2 WHERE ltp2.complex_id = ps.complex_id)
+                    OR EXISTS (SELECT 1 FROM lease_term_prices ltp2 WHERE ltp2.complex_id = ps.complex_id AND ltp2.lease_months >= 12)
+                  )
                 GROUP BY ps.complex_id, ps.floorplan_name
                 ORDER BY ps.complex_id, min_price ASC
                 """,
@@ -324,14 +344,20 @@ def get_units_for_floorplan(
         snap_complex_filter = "AND ps2.complex_id = :cid" if complex_id else ""
 
         if lease_term and lease_term != 15:
-            lt_ts = _latest_lease_term_ts(conn, lease_term, complex_id)
-            if not lt_ts:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"No lease term data for {lease_term} months. Run lease_terms.py first.",
-                )
             rows = conn.execute(
                 f"""
+                WITH latest_lt AS (
+                    SELECT complex_id, MAX(scraped_at) AS ts
+                    FROM lease_term_prices
+                    WHERE lease_months = :term AND floorplan_name = :fp
+                    GROUP BY complex_id
+                ),
+                latest_snap AS (
+                    SELECT complex_id, MAX(scraped_at) AS ts
+                    FROM price_snapshots
+                    WHERE floorplan_name = :fp
+                    GROUP BY complex_id
+                )
                 SELECT
                     ltp.complex_id,
                     c.display_name AS complex_name,
@@ -347,27 +373,29 @@ def get_units_for_floorplan(
                     ps.unit_features,
                     ltp.scraped_at
                 FROM lease_term_prices ltp
+                JOIN latest_lt ll ON ll.complex_id = ltp.complex_id AND ll.ts = ltp.scraped_at
                 JOIN complexes c ON c.id = ltp.complex_id
                 JOIN (
                     SELECT ps2.complex_id, ps2.unit_id, ps2.floor, ps2.bedrooms,
                            ps2.bathrooms, ps2.sqft, ps2.avail_note,
                            ps2.available_date, ps2.special_tags, ps2.unit_features
                     FROM price_snapshots ps2
-                    WHERE ps2.scraped_at = (
-                              SELECT MAX(scraped_at) FROM price_snapshots
-                              WHERE floorplan_name = :fp {snap_complex_filter}
-                          )
-                      AND ps2.floorplan_name = :fp
+                    JOIN latest_snap ls ON ls.complex_id = ps2.complex_id AND ls.ts = ps2.scraped_at
+                    WHERE ps2.floorplan_name = :fp
                     {snap_complex_filter}
                 ) ps ON ps.complex_id = ltp.complex_id AND ps.unit_id = ltp.unit_id
-                WHERE ltp.scraped_at = :lt_ts
+                WHERE ltp.lease_months = :term
                   AND ltp.floorplan_name = :fp
-                  AND ltp.lease_months = :term
                   {complex_filter}
                 ORDER BY ltp.monthly_rent ASC
                 """,
-                {"fp": floorplan_name, "lt_ts": lt_ts, "term": lease_term, "cid": complex_id},
+                {"fp": floorplan_name, "term": lease_term, "cid": complex_id},
             ).fetchall()
+            if not rows:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No lease term data for {lease_term} months. Run lease_terms.py first.",
+                )
         else:
             ts = latest_ts(conn, complex_id)
             complex_filter2 = "AND complex_id = :cid" if complex_id else ""

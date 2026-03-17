@@ -70,6 +70,9 @@ def parse_main_page(html: str) -> list[dict]:
         available_date = move_in[:10] if move_in else None  # "2026-03-18T00:00:00.000Z" → "2026-03-18"
         avail_count = int(ap.get("availableUnits") or len(unit_ids))
 
+        media = ap.get("media") or {}
+        image_url = media.get("floorPlanImage")
+
         results.append({
             "name": name,
             "slug": slug,
@@ -84,6 +87,7 @@ def parse_main_page(html: str) -> list[dict]:
             "detail_url": None,
             "default_unit_id": default_unit,
             "available_unit_ids": unit_ids,
+            "image_url": image_url,
         })
 
     return results

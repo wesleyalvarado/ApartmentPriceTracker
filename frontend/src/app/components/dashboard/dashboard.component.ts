@@ -16,9 +16,10 @@ import { ChartModule } from 'primeng/chart';
 import { ApiService } from '../../services/api.service';
 import { Complex, FloorPlan, Unit, PricePoint } from '../../models/apartment.model';
 
-interface BedroomOption  { label: string; value: number | null; }
-interface LeaseTermOption { label: string; value: number; }
-interface ComplexOption   { label: string; value: number | null; }
+interface BedroomOption      { label: string; value: number | null; }
+interface LeaseTermOption    { label: string; value: number; }
+interface ComplexOption      { label: string; value: number | null; }
+interface AvailabilityOption { label: string; value: number | null; }
 
 @Component({
   selector: 'app-dashboard',
@@ -38,9 +39,10 @@ export class DashboardComponent implements OnInit {
   // ── State ──────────────────────────────────────────────────────────────────
   complexes         = signal<Complex[]>([]);
   floorPlans        = signal<FloorPlan[]>([]);
-  loading           = signal(true);
-  selectedBedrooms  = signal<number | null>(null);
-  selectedLeaseTerm = signal<number>(15);
+  loading              = signal(true);
+  selectedBedrooms     = signal<number | null>(null);
+  selectedLeaseTerm    = signal<number>(15);
+  selectedAvailability = signal<number | null>(null);
   selectedComplexId = signal<number | null>(null);
   expandedPlan      = signal<string | null>(null);  // key: "complexId:planName"
   expandedUnits     = signal<Unit[]>([]);
@@ -52,6 +54,14 @@ export class DashboardComponent implements OnInit {
     { label: 'Studio', value: 0 },
     { label: '1 BR',   value: 1 },
     { label: '2 BR',   value: 2 },
+  ];
+
+  availabilityOptions: AvailabilityOption[] = [
+    { label: 'Any',     value: null },
+    { label: 'Now',     value: 0 },
+    { label: '30 days', value: 30 },
+    { label: '60 days', value: 60 },
+    { label: '90 days', value: 90 },
   ];
 
   readonly allLeaseTermOptions: LeaseTermOption[] = [
@@ -81,20 +91,35 @@ export class DashboardComponent implements OnInit {
   get selectedComplexIdModel(): number | null { return this.selectedComplexId(); }
   set selectedComplexIdModel(v: number | null) { this.selectedComplexId.set(v); }
 
+  get selectedAvailabilityModel(): number | null { return this.selectedAvailability(); }
+  set selectedAvailabilityModel(v: number | null) { this.selectedAvailability.set(v); }
+
   // ── Derived ────────────────────────────────────────────────────────────────
   filtered = computed(() => {
-    const br = this.selectedBedrooms();
-    return br === null
-      ? this.floorPlans()
-      : this.floorPlans().filter(fp => fp.bedrooms === br);
+    const br   = this.selectedBedrooms();
+    const days = this.selectedAvailability();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return this.floorPlans().filter(fp => {
+      if (br !== null && fp.bedrooms !== br) return false;
+      if (days !== null) {
+        if (!fp.earliest_available) return true; // no date = available now
+        const avail = new Date(fp.earliest_available + 'T00:00:00');
+        const cutoff = new Date(today);
+        cutoff.setDate(cutoff.getDate() + days);
+        if (avail > cutoff) return false;
+      }
+      return true;
+    });
   });
 
   totalUnits = computed(() =>
-    this.floorPlans().reduce((s, fp) => s + fp.available_units, 0)
+    this.filtered().reduce((s, fp) => s + fp.available_units, 0)
   );
 
   cheapestUnit = computed(() => {
-    const plans = this.floorPlans();
+    const plans = this.filtered();
     if (!plans.length) return null;
     return plans.reduce((min, fp) => fp.min_price < min.min_price ? fp : min);
   });

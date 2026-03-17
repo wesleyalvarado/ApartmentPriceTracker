@@ -128,6 +128,7 @@ CREATE TABLE IF NOT EXISTS floorplan_meta (
     bathrooms       REAL    NOT NULL,
     sqft            INTEGER NOT NULL,
     special_tags    TEXT,
+    image_url       TEXT,
     last_updated    TEXT    NOT NULL,
     PRIMARY KEY (complex_id, floorplan_name)
 );
@@ -211,14 +212,14 @@ def upsert_floorplan_meta(conn: sqlite3.Connection, fp: dict, ts: str) -> None:
         """
         INSERT OR REPLACE INTO floorplan_meta
             (complex_id, floorplan_name, floorplan_slug, floor,
-             bedrooms, bathrooms, sqft, special_tags, last_updated)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+             bedrooms, bathrooms, sqft, special_tags, image_url, last_updated)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             COMPLEX_ID,
             fp["name"], fp["slug"], fp["floor"],
             fp["beds"], fp["baths"], fp["sqft"],
-            fp.get("special_tags"), ts,
+            fp.get("special_tags"), fp.get("image_url"), ts,
         ),
     )
 

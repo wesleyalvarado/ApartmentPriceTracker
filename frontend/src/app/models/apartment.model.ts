@@ -22,6 +22,7 @@ export interface FloorPlan {
   earliest_available: string | null;
   special_tags: string | null;
   scraped_at: string;
+  image_url: string | null;
 }
 
 export interface Unit {

@@ -32,7 +32,7 @@
     </div>
     <div class="stat-divider"></div>
     <div class="stat-item">
-      <div class="stat-value">{{ floorPlans().length }}</div>
+      <div class="stat-value">{{ filtered().length }}</div>
       <div class="stat-label">Floor Plans</div>
     </div>
     <div class="stat-divider"></div>
@@ -83,6 +83,17 @@
           [(ngModel)]="selectedBedrooms"
           [ngModelOptions]="{standalone: true}"
           (onChange)="selectedBedrooms.set($event.value)"
+          optionLabel="label"
+          optionValue="value"
+        />
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Available From</span>
+        <p-selectbutton
+          [options]="availabilityOptions"
+          [(ngModel)]="selectedAvailabilityModel"
+          [ngModelOptions]="{standalone: true}"
           optionLabel="label"
           optionValue="value"
         />
@@ -211,6 +222,17 @@
                   <i class="pi pi-info-circle"></i>
                   Price history chart will appear after multiple scrape runs.
                 </div>
+              }
+
+              <!-- Floor plan image -->
+              @if (fp.image_url) {
+                <div class="floorplan-image-section">
+                  <div class="section-label">
+                    <i class="pi pi-image"></i> Floor Plan Layout
+                  </div>
+                  <img [src]="fp.image_url" alt="{{ fp.floorplan_name }} layout" class="floorplan-img" />
+                </div>
+                <p-divider />
               }
 
               <!-- Units table -->

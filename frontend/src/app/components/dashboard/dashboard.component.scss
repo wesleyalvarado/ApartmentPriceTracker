@@ -91,48 +91,44 @@
 }
 
 /* ── Filters ─────────────────────────────────────────────────────────────── */
-.filters-row {
+.filters-panel {
+  background: var(--camden-surface);
+  border: 1px solid var(--camden-border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.75rem;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
 }
-.filter-divider {
-  width: 1px;
-  height: 32px;
-  background: var(--camden-border);
+.filters-body {
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
 .filter-group {
   display: flex;
-  align-items: center;
-  gap: .6rem;
+  flex-direction: column;
+  gap: .5rem;
 }
-.filter-group-label {
-  font-size: .78rem;
-  font-weight: 600;
+.filter-label {
+  font-size: .72rem;
+  font-weight: 700;
   color: var(--camden-muted);
   text-transform: uppercase;
-  letter-spacing: .05em;
-  white-space: nowrap;
+  letter-spacing: .07em;
 }
-.lease-term-group {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-}
-.lease-term-label {
-  font-size: .78rem;
+.filter-count-badge {
+  font-size: .8rem;
   font-weight: 600;
-  color: var(--camden-muted);
-  text-transform: uppercase;
-  letter-spacing: .05em;
+  color: var(--camden-green);
+  background: var(--camden-green-pale);
+  padding: .35rem .9rem;
+  border-radius: 20px;
   white-space: nowrap;
-}
-.filter-count {
-  font-size: .85rem;
-  color: var(--camden-muted);
-  margin-left: auto;
+  align-self: flex-end;
 }
 
 /* ── Cards grid ──────────────────────────────────────────────────────────── */

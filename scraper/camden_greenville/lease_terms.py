@@ -212,6 +212,17 @@ def get_floor_plans_from_db(conn: sqlite3.Connection) -> list[dict]:
 
 
 def insert_lease_term_price(conn: sqlite3.Connection, rec: dict) -> None:
+    existing = conn.execute(
+        "SELECT id, monthly_rent FROM lease_term_prices WHERE unit_id=? AND lease_months=? AND DATE(scraped_at)=DATE(?)",
+        (rec["unit_id"], rec["lease_months"], rec["scraped_at"]),
+    ).fetchone()
+    if existing:
+        if existing[1] != rec["monthly_rent"]:
+            conn.execute(
+                "UPDATE lease_term_prices SET monthly_rent=?, total_cost=?, scraped_at=? WHERE id=?",
+                (rec["monthly_rent"], rec.get("total_cost"), rec["scraped_at"], existing[0]),
+            )
+        return
     conn.execute(
         """
         INSERT INTO lease_term_prices

@@ -46,6 +46,12 @@ export class ApiService {
     );
   }
 
+  leaseTerms(complexId?: number | null): Observable<number[]> {
+    let params = new HttpParams();
+    if (complexId) params = params.set('complex_id', complexId);
+    return this.http.get<number[]>(`${this.base}/lease_terms`, { params });
+  }
+
   stats(): Observable<Stats[]> {
     return this.http.get<Stats[]>(`${this.base}/stats`);
   }

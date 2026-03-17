@@ -5,7 +5,7 @@
       <div class="header-logo">AP</div>
       <div>
         <div class="header-title">Apartment Price Tracker</div>
-        <div class="header-sub">Camden · Dallas, TX</div>
+        <div class="header-sub">{{ headerSubtitle() }}</div>
       </div>
     </div>
 
@@ -59,52 +59,51 @@
 <main class="main-content">
 
   <!-- Filters -->
-  <div class="filters-row">
+  <div class="filters-panel">
+    <div class="filters-body">
 
-    <!-- Complex selector (visible once more than one complex exists) -->
-    @if (complexOptions().length > 2) {
+      @if (complexOptions().length > 2) {
+        <div class="filter-group">
+          <span class="filter-label">Property</span>
+          <p-selectbutton
+            [options]="complexOptions()"
+            [(ngModel)]="selectedComplexIdModel"
+            [ngModelOptions]="{standalone: true}"
+            (onChange)="onComplexChange($event.value)"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+      }
+
       <div class="filter-group">
-        <span class="filter-group-label">Complex</span>
+        <span class="filter-label">Bedrooms</span>
         <p-selectbutton
-          [options]="complexOptions()"
-          [(ngModel)]="selectedComplexIdModel"
+          [options]="bedroomOptions"
+          [(ngModel)]="selectedBedrooms"
           [ngModelOptions]="{standalone: true}"
-          (onChange)="onComplexChange($event.value)"
+          (onChange)="selectedBedrooms.set($event.value)"
           optionLabel="label"
           optionValue="value"
         />
       </div>
-      <div class="filter-divider"></div>
-    }
 
-    <!-- Bedroom filter -->
-    <p-selectbutton
-      [options]="bedroomOptions"
-      [(ngModel)]="selectedBedrooms"
-      [ngModelOptions]="{standalone: true}"
-      (onChange)="selectedBedrooms.set($event.value)"
-      optionLabel="label"
-      optionValue="value"
-    />
+      <div class="filter-group">
+        <span class="filter-label">Lease Term</span>
+        <p-selectbutton
+          [options]="leaseTermOptions()"
+          [(ngModel)]="selectedLeaseTermModel"
+          [ngModelOptions]="{standalone: true}"
+          (onChange)="onLeaseTermChange($event.value)"
+          optionLabel="label"
+          optionValue="value"
+        />
+      </div>
 
-    <div class="filter-divider"></div>
-
-    <!-- Lease term filter -->
-    <div class="lease-term-group">
-      <span class="lease-term-label">Lease</span>
-      <p-selectbutton
-        [options]="leaseTermOptions"
-        [(ngModel)]="selectedLeaseTermModel"
-        [ngModelOptions]="{standalone: true}"
-        (onChange)="onLeaseTermChange($event.value)"
-        optionLabel="label"
-        optionValue="value"
-      />
     </div>
-
-    <span class="filter-count">
+    <div class="filter-count-badge">
       {{ filtered().length }} floor plan{{ filtered().length !== 1 ? 's' : '' }}
-    </span>
+    </div>
   </div>
 
   <!-- Loading skeletons -->

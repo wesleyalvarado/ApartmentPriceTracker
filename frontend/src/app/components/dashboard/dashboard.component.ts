@@ -54,13 +54,19 @@ export class DashboardComponent implements OnInit {
     { label: '2 BR',   value: 2 },
   ];
 
-  leaseTermOptions: LeaseTermOption[] = [
+  readonly allLeaseTermOptions: LeaseTermOption[] = [
     { label: '15 mo', value: 15 },
     { label: '14 mo', value: 14 },
     { label: '6 mo',  value: 6 },
     { label: '5 mo',  value: 5 },
     { label: '4 mo',  value: 4 },
   ];
+
+  availableLeaseTerms = signal<number[]>([15, 14, 6, 5, 4]);
+
+  leaseTermOptions = computed<LeaseTermOption[]>(() =>
+    this.allLeaseTermOptions.filter(o => this.availableLeaseTerms().includes(o.value))
+  );
 
   // Built once complexes load
   complexOptions = computed<ComplexOption[]>(() => [
@@ -104,6 +110,13 @@ export class DashboardComponent implements OnInit {
     this.selectedComplexId() === null && this.complexes().length > 1
   );
 
+  headerSubtitle = computed(() => {
+    const id = this.selectedComplexId();
+    if (id === null) return 'Dallas, TX';
+    const cx = this.complexes().find(c => c.id === id);
+    return cx ? cx.display_name : 'Dallas, TX';
+  });
+
   // Chart data
   chartData = signal<any>(null);
   chartOptions: any = {
@@ -131,6 +144,7 @@ export class DashboardComponent implements OnInit {
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   ngOnInit() {
     this.api.complexes().subscribe(complexes => this.complexes.set(complexes));
+    this._loadLeaseTerms();
     this._loadFloorPlans();
   }
 
@@ -138,6 +152,7 @@ export class DashboardComponent implements OnInit {
   onComplexChange(complexId: number | null) {
     this.selectedComplexId.set(complexId);
     this._collapseExpanded();
+    this._loadLeaseTerms();
     this._loadFloorPlans();
   }
 
@@ -190,6 +205,19 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  private _loadLeaseTerms() {
+    this.api.leaseTerms(this.selectedComplexId()).subscribe(terms => {
+      // Show 15mo only when viewing all complexes or when 14mo exists (longer-term property)
+      const show15 = this.selectedComplexId() === null || terms.includes(14);
+      const allTerms = show15 ? [15, ...terms] : terms;
+      this.availableLeaseTerms.set(allTerms);
+      if (!allTerms.includes(this.selectedLeaseTerm())) {
+        this.selectedLeaseTerm.set(allTerms[0]);
+        this._loadFloorPlans();
+      }
+    });
+  }
+
   private _collapseExpanded() {
     this.expandedPlan.set(null);
     this.expandedUnits.set([]);
@@ -213,8 +241,8 @@ export class DashboardComponent implements OnInit {
 
   formatDate(iso: string | null): string {
     if (!iso) return '—';
-    return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric',
-    });
+    const d = new Date(iso + 'T00:00:00');
+    if (d <= new Date()) return 'Available Now';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 }

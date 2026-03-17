@@ -227,6 +227,19 @@ def insert_snapshot(conn: sqlite3.Connection, unit: dict, ts: str) -> None:
     if not unit.get("price") or unit["price"] <= 0:
         log.warning("Skipping unit %s — no valid price", unit.get("unit_id"))
         return
+    existing = conn.execute(
+        "SELECT id, price FROM price_snapshots WHERE unit_id=? AND DATE(scraped_at)=DATE(?)",
+        (unit["unit_id"], ts),
+    ).fetchone()
+    if existing:
+        if existing[1] != unit["price"]:
+            conn.execute(
+                """UPDATE price_snapshots
+                   SET price=?, scraped_at=?, available_date=?, avail_note=?
+                   WHERE id=?""",
+                (unit["price"], ts, unit.get("available_date"), unit.get("avail_note"), existing[0]),
+            )
+        return
     conn.execute(
         """
         INSERT INTO price_snapshots

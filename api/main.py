@@ -185,14 +185,15 @@ def get_floorplans(
                     MIN(ltp.monthly_rent)         AS min_price,
                     MAX(ltp.monthly_rent)         AS max_price,
                     ROUND(AVG(ltp.monthly_rent))  AS avg_price,
-                    MIN(ltp.move_in_date)         AS earliest_available,
+                    COALESCE(NULLIF(MIN(ltp.move_in_date), ''), MIN(ps.available_date)) AS earliest_available,
                     ps.special_tags,
                     ltp.scraped_at
                 FROM lease_term_prices ltp
                 JOIN complexes c ON c.id = ltp.complex_id
                 JOIN (
                     SELECT ps2.complex_id, ps2.floorplan_name, ps2.floorplan_slug,
-                           ps2.bedrooms, ps2.bathrooms, ps2.sqft, ps2.special_tags
+                           ps2.bedrooms, ps2.bathrooms, ps2.sqft, ps2.special_tags,
+                           MIN(ps2.available_date) AS available_date
                     FROM price_snapshots ps2
                     JOIN latest_snap ls ON ls.complex_id = ps2.complex_id AND ls.ts = ps2.scraped_at
                     GROUP BY ps2.complex_id, ps2.floorplan_name
@@ -238,6 +239,28 @@ def get_floorplans(
                 {"cid": complex_id},
             ).fetchall()
     return rows_to_list(rows)
+
+
+@app.get("/api/lease_terms")
+def get_lease_terms(
+    complex_id: Optional[int] = Query(None, description="Filter by complex ID"),
+):
+    """
+    Returns the list of available lease term months for a complex (or all complexes).
+    Always includes 15 (the default price_snapshots view).
+    """
+    with get_db() as conn:
+        if complex_id:
+            rows = conn.execute(
+                "SELECT DISTINCT lease_months FROM lease_term_prices "
+                "WHERE complex_id = ? ORDER BY lease_months DESC",
+                (complex_id,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT DISTINCT lease_months FROM lease_term_prices ORDER BY lease_months DESC"
+            ).fetchall()
+    return [r[0] for r in rows]
 
 
 @app.get("/api/latest")
@@ -318,7 +341,7 @@ def get_units_for_floorplan(
                     ps.bathrooms,
                     ps.sqft,
                     ltp.monthly_rent   AS price,
-                    ltp.move_in_date   AS available_date,
+                    COALESCE(NULLIF(ltp.move_in_date, ''), ps.available_date) AS available_date,
                     ps.avail_note,
                     ps.special_tags,
                     ps.unit_features,
@@ -328,7 +351,7 @@ def get_units_for_floorplan(
                 JOIN (
                     SELECT ps2.complex_id, ps2.unit_id, ps2.floor, ps2.bedrooms,
                            ps2.bathrooms, ps2.sqft, ps2.avail_note,
-                           ps2.special_tags, ps2.unit_features
+                           ps2.available_date, ps2.special_tags, ps2.unit_features
                     FROM price_snapshots ps2
                     WHERE ps2.scraped_at = (
                               SELECT MAX(scraped_at) FROM price_snapshots

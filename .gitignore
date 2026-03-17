@@ -1,6 +1,7 @@
 # ── Private docs ─────────────────────────────────────────────────────────────
 SPEC.md
 PROGRESS.md
+SKYHOUSE_SPEC.md
 
 # ── Scraped data (generated, not for repo) ───────────────────────────────────
 data/*.db

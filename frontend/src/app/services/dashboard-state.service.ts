@@ -21,7 +21,7 @@ export class DashboardStateService {
   floorPlans            = signal<FloorPlan[]>([]);
   loading               = signal(true);
   selectedBedrooms      = signal<number | null>(null);
-  selectedLeaseTerm     = signal<number>(15);
+  selectedLeaseTerm     = signal<number>(4);
   selectedAvailability  = signal<number | null>(null);
   selectedComplexId     = signal<number | null>(null);
   expandedPlan          = signal<string | null>(null);

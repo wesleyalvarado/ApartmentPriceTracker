@@ -14,8 +14,79 @@ import { StatusValue } from '../../models/apartment.model';
   selector: 'app-filter-bar',
   standalone: true,
   imports: [CommonModule, FormsModule, SelectButtonModule],
-  templateUrl: './filter-bar.component.html',
   styleUrl: './filter-bar.component.scss',
+  template: `
+    <div class="filters-panel">
+      <div class="filters-body">
+
+        @if (complexOptions.length > 2) {
+          <div class="filter-group">
+            <span class="filter-label">Property</span>
+            <p-selectbutton
+              [options]="complexOptions"
+              [ngModel]="selectedComplexId"
+              (ngModelChange)="complexChange.emit($event)"
+              [ngModelOptions]="{standalone: true}"
+              optionLabel="label"
+              optionValue="value"
+            />
+          </div>
+        }
+
+        <div class="filter-group">
+          <span class="filter-label">Bedrooms</span>
+          <p-selectbutton
+            [options]="bedroomOptions"
+            [ngModel]="selectedBedrooms"
+            (ngModelChange)="bedroomChange.emit($event)"
+            [ngModelOptions]="{standalone: true}"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Available From</span>
+          <p-selectbutton
+            [options]="availabilityOptions"
+            [ngModel]="selectedAvailability"
+            (ngModelChange)="availabilityChange.emit($event)"
+            [ngModelOptions]="{standalone: true}"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Lease Term</span>
+          <p-selectbutton
+            [options]="leaseTermOptions"
+            [ngModel]="selectedLeaseTerm"
+            (ngModelChange)="leaseTermChange.emit($event)"
+            [ngModelOptions]="{standalone: true}"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Status</span>
+          <p-selectbutton
+            [options]="statusOptions"
+            [ngModel]="selectedStatus"
+            (ngModelChange)="statusChange.emit($event)"
+            [ngModelOptions]="{standalone: true}"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+
+      </div>
+      <div class="filter-count-badge">
+        {{ planCount }} floor plan{{ planCount !== 1 ? 's' : '' }}
+      </div>
+    </div>
+  `,
 })
 export class FilterBarComponent {
   @Input({ required: true }) complexOptions!: ComplexOption[];

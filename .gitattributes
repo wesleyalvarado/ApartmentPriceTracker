@@ -1,0 +1,10 @@
+# Tell GitHub Linguist to ignore generated/vendor/utility files
+# so the language breakdown reflects the actual application code.
+
+# Scraper debug/test utilities — not app code
+scraper/camden_greenville/verify.py      linguist-detectable=false
+scraper/camden_greenville/test_parser.py linguist-detectable=false
+
+# Migration scripts — one-time ops, not app code
+scraper/migrate_add_complexes.py         linguist-detectable=false
+scraper/house_prices/migrate.py          linguist-detectable=false

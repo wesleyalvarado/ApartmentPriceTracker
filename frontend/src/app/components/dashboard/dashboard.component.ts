@@ -22,7 +22,7 @@ import {
     <header class="header">
       <div class="header-inner">
         <div class="header-brand">
-          <div class="header-logo">AP</div>
+          <div class="header-logo"><i class="pi pi-home"></i></div>
           <div>
             <div class="header-title">Apartment Price Tracker</div>
             <div class="header-sub">{{ headerSubtitle() }}</div>
@@ -60,7 +60,7 @@ import {
             @if (selectedComplexId() === null && complexes().length > 1) {
               {{ complexes().length }} Complexes
             } @else {
-              Studio · 1BR · 2BR
+              {{ availableTypes() }}
             }
           </div>
           <div class="stat-label">
@@ -286,6 +286,11 @@ export class DashboardComponent implements OnInit {
     const plans = this.displayFiltered();
     if (!plans.length) return null;
     return plans.reduce((min, fp) => fp.display_min < min.display_min ? fp : min);
+  });
+
+  availableTypes = computed(() => {
+    const beds = [...new Set(this.displayFiltered().map(fp => fp.bedrooms))].sort((a, b) => a - b);
+    return beds.map(b => b === 0 ? 'Studio' : `${b}BR`).join(' · ') || '—';
   });
 
   expandedDisplayUnits = computed<DisplayUnit[]>(() => {

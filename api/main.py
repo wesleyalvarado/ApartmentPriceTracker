@@ -199,7 +199,8 @@ def get_floorplans(
                     COALESCE(NULLIF(MIN(ltp.move_in_date), ''), MIN(ps.available_date)) AS earliest_available,
                     ps.special_tags,
                     ltp.scraped_at,
-                    fm.image_url
+                    fm.image_url,
+                    fm.floor               AS url_floor
                 FROM lease_term_prices ltp
                 JOIN latest_lt ll ON ll.complex_id = ltp.complex_id AND ll.ts = ltp.scraped_at
                 JOIN complexes c ON c.id = ltp.complex_id
@@ -243,7 +244,8 @@ def get_floorplans(
                     MIN(ps.available_date)     AS earliest_available,
                     ps.special_tags,
                     l.ts                       AS scraped_at,
-                    fm.image_url
+                    fm.image_url,
+                    fm.floor               AS url_floor
                 FROM price_snapshots ps
                 JOIN latest l ON l.complex_id = ps.complex_id AND l.ts = ps.scraped_at
                 JOIN complexes c ON c.id = ps.complex_id

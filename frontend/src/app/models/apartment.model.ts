@@ -23,6 +23,7 @@ export interface FloorPlan {
   special_tags: string | null;
   scraped_at: string;
   image_url: string | null;
+  url_floor: number | null;
 }
 
 export interface Unit {

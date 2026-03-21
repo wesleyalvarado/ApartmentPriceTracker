@@ -21,7 +21,7 @@ function makeFp(overrides: Partial<DisplayFloorPlan> = {}): DisplayFloorPlan {
     bedrooms: 0, bathrooms: 1, sqft: 550,
     available_units: 3, min_price: 1229, max_price: 1289, avg_price: 1259,
     earliest_available: null, special_tags: null,
-    scraped_at: '2026-03-20T15:00:00Z', image_url: null,
+    scraped_at: '2026-03-20T15:00:00Z', image_url: null, url_floor: null,
     display_units: 3, display_min: 1229, display_max: 1289,
     ...overrides,
   };

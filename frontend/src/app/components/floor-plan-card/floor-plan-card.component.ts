@@ -11,6 +11,7 @@ import { ChartModule } from 'primeng/chart';
 
 import { DashboardStateService } from '../../services/dashboard-state.service';
 import { DisplayFloorPlan, DisplayUnit, StatusValue } from '../../models/apartment.model';
+import { FloorPlanLinkComponent } from '../floor-plan-link/floor-plan-link.component';
 
 @Component({
   selector: 'app-floor-plan-card',
@@ -19,6 +20,7 @@ import { DisplayFloorPlan, DisplayUnit, StatusValue } from '../../models/apartme
     CommonModule,
     CardModule, TableModule, TagModule, SkeletonModule,
     ChipModule, DividerModule, ChartModule,
+    FloorPlanLinkComponent,
   ],
   styleUrl: './floor-plan-card.component.scss',
   template: `
@@ -34,6 +36,7 @@ import { DisplayFloorPlan, DisplayUnit, StatusValue } from '../../models/apartme
               @if (showComplexBadge) {
                 <span class="complex-badge">{{ fp.complex_name }}</span>
               }
+              <app-floor-plan-link [fp]="fp" />
             </div>
             <p-tag
               [value]="fp.display_units + (fp.display_units === 1 ? ' unit' : ' units')"

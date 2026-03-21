@@ -31,6 +31,12 @@ interface DisplayUnit {
   last_seen?: string;
 }
 
+interface DisplayFloorPlan extends FloorPlan {
+  display_units: number;
+  display_min: number;
+  display_max: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -117,6 +123,15 @@ export class DashboardComponent implements OnInit {
   set selectedStatusModel(v: 'available' | 'rented' | 'all') { this.selectedStatus.set(v); }
 
   // ── Derived ────────────────────────────────────────────────────────────────
+  rentedByFloorPlan = computed(() => {
+    const map = new Map<string, RentedUnit[]>();
+    for (const u of this.rentedUnits()) {
+      if (!map.has(u.floorplan_name)) map.set(u.floorplan_name, []);
+      map.get(u.floorplan_name)!.push(u);
+    }
+    return map;
+  });
+
   filtered = computed(() => {
     const br   = this.selectedBedrooms();
     const days = this.selectedAvailability();
@@ -136,14 +151,39 @@ export class DashboardComponent implements OnInit {
     });
   });
 
+  displayFiltered = computed<DisplayFloorPlan[]>(() => {
+    const status    = this.selectedStatus();
+    const rentedMap = this.rentedByFloorPlan();
+
+    return this.filtered().map(fp => {
+      const rented       = rentedMap.get(fp.floorplan_name) ?? [];
+      const rentedPrices = rented.map(r => r.last_price);
+      const rentedMin    = rentedPrices.length ? Math.min(...rentedPrices) : null;
+      const rentedMax    = rentedPrices.length ? Math.max(...rentedPrices) : null;
+
+      if (status === 'rented') {
+        return { ...fp, display_units: rented.length, display_min: rentedMin ?? fp.min_price, display_max: rentedMax ?? fp.max_price };
+      } else if (status === 'all') {
+        return {
+          ...fp,
+          display_units: fp.available_units + rented.length,
+          display_min: Math.min(fp.min_price, rentedMin ?? fp.min_price),
+          display_max: Math.max(fp.max_price, rentedMax ?? fp.max_price),
+        };
+      } else {
+        return { ...fp, display_units: fp.available_units, display_min: fp.min_price, display_max: fp.max_price };
+      }
+    }).filter(fp => fp.display_units > 0);
+  });
+
   totalUnits = computed(() =>
-    this.filtered().reduce((s, fp) => s + fp.available_units, 0)
+    this.displayFiltered().reduce((s, fp) => s + fp.display_units, 0)
   );
 
   cheapestUnit = computed(() => {
-    const plans = this.filtered();
+    const plans = this.displayFiltered();
     if (!plans.length) return null;
-    return plans.reduce((min, fp) => fp.min_price < min.min_price ? fp : min);
+    return plans.reduce((min, fp) => fp.display_min < min.display_min ? fp : min);
   });
 
   lastScraped = computed(() => {

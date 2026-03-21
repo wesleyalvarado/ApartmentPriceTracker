@@ -27,12 +27,12 @@
     </div>
     <div class="stat-divider"></div>
     <div class="stat-item">
-      <div class="stat-value">${{ cheapestUnit()?.min_price | number }}</div>
+      <div class="stat-value">${{ cheapestUnit()?.display_min | number }}</div>
       <div class="stat-label">Starting From</div>
     </div>
     <div class="stat-divider"></div>
     <div class="stat-item">
-      <div class="stat-value">{{ filtered().length }}</div>
+      <div class="stat-value">{{ displayFiltered().length }}</div>
       <div class="stat-label">Floor Plans</div>
     </div>
     <div class="stat-divider"></div>
@@ -44,6 +44,7 @@
           Studio · 1BR · 2BR
         }
       </div>
+
       <div class="stat-label">
         @if (selectedComplexId() === null && complexes().length > 1) {
           Tracked
@@ -124,7 +125,7 @@
 
     </div>
     <div class="filter-count-badge">
-      {{ filtered().length }} floor plan{{ filtered().length !== 1 ? 's' : '' }}
+      {{ displayFiltered().length }} floor plan{{ displayFiltered().length !== 1 ? 's' : '' }}
     </div>
   </div>
 
@@ -142,7 +143,7 @@
   <!-- Floor plan cards -->
   @if (!loading()) {
     <div class="grid">
-      @for (fp of filtered(); track planKey(fp)) {
+      @for (fp of displayFiltered(); track planKey(fp)) {
         <div class="card-wrapper">
           <p-card
             [styleClass]="'fp-card ' + (expandedPlan() === planKey(fp) ? 'fp-card--expanded' : '')"
@@ -157,7 +158,7 @@
                   }
                 </div>
                 <p-tag
-                  [value]="fp.available_units + (fp.available_units === 1 ? ' unit' : ' units')"
+                  [value]="fp.display_units + (fp.display_units === 1 ? ' unit' : ' units')"
                   severity="success"
                   [rounded]="true"
                 />
@@ -166,12 +167,12 @@
 
             <div class="card-body">
               <div class="card-price">
-                ${{ fp.min_price | number }}
-                @if (fp.max_price > fp.min_price) {
-                  <span class="card-price-max"> – ${{ fp.max_price | number }}</span>
+                ${{ fp.display_min | number }}
+                @if (fp.display_max > fp.display_min) {
+                  <span class="card-price-max"> – ${{ fp.display_max | number }}</span>
                 }
               </div>
-              <div class="card-price-label">/ month{{ fp.max_price > fp.min_price ? '' : ' starting' }}</div>
+              <div class="card-price-label">/ month{{ fp.display_max > fp.display_min ? '' : ' starting' }}</div>
 
               <div class="card-specs">
                 <span>

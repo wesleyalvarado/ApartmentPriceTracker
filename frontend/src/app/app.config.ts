@@ -1,9 +1,11 @@
 import { ApplicationConfig } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 import { definePreset } from '@primeng/themes';
+import { routes } from './app.routes';
 
 const CamdenPreset = definePreset(Aura, {
   semantic: {
@@ -25,6 +27,7 @@ const CamdenPreset = definePreset(Aura, {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideRouter(routes),
     provideAnimationsAsync(),
     provideHttpClient(),
     providePrimeNG({

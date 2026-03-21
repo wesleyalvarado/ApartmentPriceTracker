@@ -27,7 +27,7 @@ from parser import parse_main_page, parse_unit_list, parse_unit_detail, parse_al
 # ── Paths ─────────────────────────────────────────────────────────────────────
 
 ROOT = Path(__file__).parent.parent.parent  # AptPricing/
-DB_PATH = ROOT / "data" / "camden_prices.db"
+DB_PATH = ROOT / "data" / "apartments.db"
 SNAPSHOTS_DIR = ROOT / "data" / "snapshots"
 
 COMPLEX_ID = 1  # Camden Greenville — see complexes table

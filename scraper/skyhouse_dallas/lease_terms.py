@@ -40,7 +40,7 @@ SC_BASE_URL   = (
     "skyhouse-dallas/oleapplication.aspx"
 )
 
-DB_PATH = Path(__file__).resolve().parents[2] / "data" / "camden_prices.db"
+DB_PATH = Path(__file__).resolve().parents[2] / "data" / "apartments.db"
 
 HEADERS = {
     "User-Agent": (

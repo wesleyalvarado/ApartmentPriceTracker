@@ -34,7 +34,7 @@ COMPLEX_URL    = (
 )
 PROPERTY_ID    = "210946"   # Yardi / RentCafe propertyId
 
-DB_PATH = Path(__file__).resolve().parents[2] / "data" / "camden_prices.db"
+DB_PATH = Path(__file__).resolve().parents[2] / "data" / "apartments.db"
 
 HEADERS = {
     "User-Agent": (

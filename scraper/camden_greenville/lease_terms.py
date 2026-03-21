@@ -32,7 +32,7 @@ DESIRED_TERMS   = [4, 5, 6, 14]
 COMMUNITY_ID    = 4877024            # Camden Greenville RealPage community ID
 COMPLEX_ID      = 1                  # Camden Greenville — see complexes table
 ROOT            = Path(__file__).parent.parent.parent  # AptPricing/
-DB_PATH         = ROOT / "data" / "camden_prices.db"
+DB_PATH         = ROOT / "data" / "apartments.db"
 SNAPSHOTS_DIR   = ROOT / "data" / "snapshots"
 
 BASE_URL = (

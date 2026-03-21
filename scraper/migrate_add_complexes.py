@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 ROOT    = Path(__file__).parent.parent
-DB_PATH = ROOT / "data" / "camden_prices.db"
+DB_PATH = ROOT / "data" / "apartments.db"
 
 
 def migrate(conn: sqlite3.Connection) -> None:

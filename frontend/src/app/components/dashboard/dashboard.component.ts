@@ -22,7 +22,7 @@ import {
     <header class="header">
       <div class="header-inner">
         <div class="header-brand">
-          <div class="header-logo"><i class="pi pi-home"></i></div>
+          <div class="header-logo"><i class="pi pi-building"></i></div>
           <div>
             <div class="header-title">Apartment Price Tracker</div>
             <div class="header-sub">{{ headerSubtitle() }}</div>

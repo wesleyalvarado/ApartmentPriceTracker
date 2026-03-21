@@ -111,3 +111,38 @@ export interface Stats {
   scrape_count: number;
   total_units_seen: number;
 }
+
+export interface HousePriceSummary {
+  zip_code: string;
+  display_name: string | null;
+  neighborhoods: string | null;
+  zhvi_current: number | null;
+  zhvi_month: string | null;
+  median_list_price: number | null;
+  median_sale_price: number | null;
+  inventory: number | null;
+  days_on_market: number | null;
+  new_listings: number | null;
+  redfin_week: string | null;
+}
+
+export interface ZhviPoint {
+  zip_code: string;
+  month: string;
+  median_value: number;
+  home_type: string;
+}
+
+export interface RedfinPoint {
+  zip_code: string;
+  period_begin: string;
+  period_end: string;
+  median_sale_price: number | null;
+  median_list_price: number | null;
+  homes_sold: number | null;
+  new_listings: number | null;
+  inventory: number | null;
+  days_on_market: number | null;
+  sale_to_list_ratio: number | null;
+  median_ppsf: number | null;
+}

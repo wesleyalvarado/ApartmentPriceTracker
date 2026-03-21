@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Complex, FloorPlan, Unit, PricePoint, Stats, RentedUnit, PriceDrop } from '../models/apartment.model';
+import { Complex, FloorPlan, Unit, PricePoint, Stats, RentedUnit, PriceDrop, HousePriceSummary, ZhviPoint, RedfinPoint } from '../models/apartment.model';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -67,5 +67,19 @@ export class ApiService {
 
   stats(): Observable<Stats[]> {
     return this.http.get<Stats[]>(`${this.base}/stats`);
+  }
+
+  housePriceSummary(): Observable<HousePriceSummary[]> {
+    return this.http.get<HousePriceSummary[]>(`${this.base}/house-prices/summary`);
+  }
+
+  zhviTrend(homeType = 'all_middle_tier', months = 24): Observable<ZhviPoint[]> {
+    const params = new HttpParams().set('home_type', homeType).set('months', months);
+    return this.http.get<ZhviPoint[]>(`${this.base}/house-prices/zhvi`, { params });
+  }
+
+  redfinMetrics(months = 12): Observable<RedfinPoint[]> {
+    const params = new HttpParams().set('months', months);
+    return this.http.get<RedfinPoint[]>(`${this.base}/house-prices/redfin`, { params });
   }
 }

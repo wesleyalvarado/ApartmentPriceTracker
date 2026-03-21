@@ -31,7 +31,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-DB_PATH = Path(__file__).parent.parent / "data" / "camden_prices.db"
+DB_PATH = Path(__file__).parent.parent / "data" / "apartments.db"
 
 app = FastAPI(
     title="Apartment Price Tracker API",
@@ -793,6 +793,141 @@ def get_price_drops(
                 {"cid": complex_id},
             ).fetchall()
     return rows_to_list(rows)
+
+
+# ── House Price helpers ───────────────────────────────────────────────────────
+
+def _house_tables_exist(conn: sqlite3.Connection) -> bool:
+    row = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='zhvi_monthly'"
+    ).fetchone()
+    return row is not None
+
+
+# ── House Price routes ────────────────────────────────────────────────────────
+
+@app.get("/api/house-prices/summary")
+def get_house_price_summary():
+    """Latest ZHVI value + Redfin metrics per zip. Returns [] if tables don't exist."""
+    with get_db() as conn:
+        if not _house_tables_exist(conn):
+            return []
+        rows = conn.execute(
+            """
+            SELECT z.zip_code,
+                   zn.display_name,
+                   zn.neighborhoods,
+                   z.median_value    AS zhvi_current,
+                   z.month           AS zhvi_month,
+                   r.median_list_price,
+                   r.median_sale_price,
+                   r.inventory,
+                   r.days_on_market,
+                   r.new_listings,
+                   r.period_begin    AS redfin_week
+            FROM (
+                SELECT zip_code, median_value, month
+                FROM zhvi_monthly
+                WHERE home_type = 'all_middle_tier'
+                  AND (zip_code, month) IN (
+                      SELECT zip_code, MAX(month)
+                      FROM zhvi_monthly
+                      WHERE home_type = 'all_middle_tier'
+                      GROUP BY zip_code
+                  )
+            ) z
+            LEFT JOIN (
+                SELECT zip_code, median_list_price, median_sale_price,
+                       inventory, days_on_market, new_listings, period_begin
+                FROM redfin_weekly
+                WHERE (zip_code, period_begin) IN (
+                    SELECT zip_code, MAX(period_begin)
+                    FROM redfin_weekly
+                    GROUP BY zip_code
+                )
+            ) r ON z.zip_code = r.zip_code
+            LEFT JOIN zip_neighborhoods zn ON z.zip_code = zn.zip_code
+            ORDER BY z.zip_code
+            """
+        ).fetchall()
+    return rows_to_list(rows)
+
+
+@app.get("/api/house-prices/zhvi")
+def get_zhvi(
+    zip_code: Optional[str] = Query(None, description="Filter by zip code"),
+    home_type: str = Query("all_middle_tier", description="ZHVI home type variant"),
+    months: int = Query(24, ge=1, le=300, description="Number of months of history"),
+):
+    """Monthly ZHVI trend for target zip codes. Returns [] if tables don't exist."""
+    with get_db() as conn:
+        if not _house_tables_exist(conn):
+            return []
+        query = (
+            "SELECT zip_code, month, median_value, home_type "
+            "FROM zhvi_monthly "
+            "WHERE home_type = ? "
+            "  AND month >= date('now', ?) "
+        )
+        params: list = [home_type, f"-{months} months"]
+        if zip_code:
+            query += " AND zip_code = ?"
+            params.append(zip_code)
+        query += " ORDER BY zip_code, month"
+        rows = conn.execute(query, params).fetchall()
+    return rows_to_list(rows)
+
+
+@app.get("/api/house-prices/redfin")
+def get_redfin(
+    zip_code: Optional[str] = Query(None, description="Filter by zip code"),
+    months: int = Query(12, ge=1, le=300, description="Number of months of history"),
+):
+    """Weekly Redfin market metrics for target zip codes. Returns [] if tables don't exist."""
+    with get_db() as conn:
+        if not _house_tables_exist(conn):
+            return []
+        query = (
+            "SELECT zip_code, period_begin, period_end, "
+            "       median_sale_price, median_list_price, "
+            "       homes_sold, new_listings, inventory, "
+            "       days_on_market, sale_to_list_ratio, median_ppsf "
+            "FROM redfin_weekly "
+            "WHERE period_begin >= date('now', ?) "
+        )
+        params: list = [f"-{months} months"]
+        if zip_code:
+            query += " AND zip_code = ?"
+            params.append(zip_code)
+        query += " ORDER BY zip_code, period_begin"
+        rows = conn.execute(query, params).fetchall()
+    return rows_to_list(rows)
+
+
+@app.get("/api/house-prices/mortgage-check")
+def mortgage_check(
+    max_monthly: float = Query(3500, description="Max total monthly payment"),
+    rate: float = Query(6.3, description="Annual mortgage rate (%)"),
+    down_pct: float = Query(20, description="Down payment percentage"),
+    tax_rate: float = Query(2.2, description="Annual property tax rate (%)"),
+    insurance_annual: float = Query(2100, description="Annual homeowner's insurance ($)"),
+):
+    """Calculate max purchase price for a given monthly budget."""
+    monthly_insurance = insurance_annual / 12
+    r = (rate / 100) / 12
+    n = 360
+    factor = (r * (1 + r) ** n) / ((1 + r) ** n - 1)
+    price_coefficient = (1 - down_pct / 100) * factor + (tax_rate / 100 / 12)
+    max_price = (max_monthly - monthly_insurance) / price_coefficient
+    return {
+        "max_purchase_price":   round(max_price),
+        "down_payment_amount":  round(max_price * down_pct / 100),
+        "loan_amount":          round(max_price * (1 - down_pct / 100)),
+        "monthly_pi":           round(max_price * (1 - down_pct / 100) * factor),
+        "monthly_tax":          round(max_price * tax_rate / 100 / 12),
+        "monthly_insurance":    round(monthly_insurance),
+        "total_monthly":        round(max_monthly),
+    }
 
 
 @app.get("/health")

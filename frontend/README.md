@@ -1,59 +1,38 @@
 # Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.4.
+Angular 20 dashboard for the Apartment Price Tracker. See the [root README](../README.md) for full project context.
 
-## Development server
+## Stack
 
-To start a local development server, run:
+- Angular 20 (standalone components, signals, inline templates)
+- PrimeNG v20 (UI components)
+- Tailwind v4 (utility styles)
+- Chart.js via `p-chart` (price history)
+- Jasmine / Karma (unit tests)
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Development
 
 ```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
+npm install
+ng serve        # http://localhost:4200 — requires API running on :8000
+ng test --watch=false --browsers=ChromeHeadless
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Structure
 
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+```
+src/app/
+├── models/
+│   └── apartment.model.ts         # All shared interfaces and option types
+├── services/
+│   ├── api.service.ts             # HttpClient wrapper for all backend calls
+│   └── dashboard-state.service.ts # Shared formatting helpers (bedroomLabel, formatDate)
+└── components/
+    ├── dashboard/                 # Page component — signals, computed, actions
+    ├── filter-bar/                # Stateless filter panel (12 @Inputs, 5 @Outputs)
+    ├── floor-plan-card/           # Stateless card + expanded unit table + chart
+    └── floor-plan-link/           # External link (Camden slug-based, SkyHouse fixed)
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+All component templates are inlined in the `.ts` file — no separate `.html` files.

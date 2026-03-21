@@ -44,6 +44,11 @@
   flex-direction: column;
   gap: 3px;
 }
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
 .card-plan-name {
   font-weight: 700;
   font-size: 1rem;

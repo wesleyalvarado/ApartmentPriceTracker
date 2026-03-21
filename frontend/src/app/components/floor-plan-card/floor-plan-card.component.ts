@@ -10,8 +10,9 @@ import { DividerModule } from 'primeng/divider';
 import { ChartModule } from 'primeng/chart';
 
 import { DashboardStateService } from '../../services/dashboard-state.service';
-import { DisplayFloorPlan, DisplayUnit, StatusValue } from '../../models/apartment.model';
+import { DisplayFloorPlan, DisplayUnit, StatusValue, PriceDrop } from '../../models/apartment.model';
 import { FloorPlanLinkComponent } from '../floor-plan-link/floor-plan-link.component';
+import { PriceDropBadgeComponent } from '../price-drop-badge/price-drop-badge.component';
 
 @Component({
   selector: 'app-floor-plan-card',
@@ -20,7 +21,7 @@ import { FloorPlanLinkComponent } from '../floor-plan-link/floor-plan-link.compo
     CommonModule,
     CardModule, TableModule, TagModule, SkeletonModule,
     ChipModule, DividerModule, ChartModule,
-    FloorPlanLinkComponent,
+    FloorPlanLinkComponent, PriceDropBadgeComponent,
   ],
   styleUrl: './floor-plan-card.component.scss',
   template: `
@@ -38,11 +39,14 @@ import { FloorPlanLinkComponent } from '../floor-plan-link/floor-plan-link.compo
               }
               <app-floor-plan-link [fp]="fp" />
             </div>
-            <p-tag
-              [value]="fp.display_units + (fp.display_units === 1 ? ' unit' : ' units')"
-              severity="success"
-              [rounded]="true"
-            />
+            <div class="card-header-right">
+              <app-price-drop-badge [drop]="priceDrop" />
+              <p-tag
+                [value]="fp.display_units + (fp.display_units === 1 ? ' unit' : ' units')"
+                severity="success"
+                [rounded]="true"
+              />
+            </div>
           </div>
         </ng-template>
 
@@ -184,6 +188,7 @@ export class FloorPlanCardComponent {
   @Input({ required: true }) chartOptions!: any;
   @Input({ required: true }) showComplexBadge!: boolean;
   @Input({ required: true }) selectedStatus!: StatusValue;
+  @Input() priceDrop: PriceDrop | null = null;
 
   @Output() toggleRequested = new EventEmitter<DisplayFloorPlan>();
 

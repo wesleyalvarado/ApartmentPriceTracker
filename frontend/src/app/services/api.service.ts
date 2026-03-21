@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Complex, FloorPlan, Unit, PricePoint, Stats, RentedUnit } from '../models/apartment.model';
+import { Complex, FloorPlan, Unit, PricePoint, Stats, RentedUnit, PriceDrop } from '../models/apartment.model';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -56,6 +56,13 @@ export class ApiService {
     let params = new HttpParams().set('days', days);
     if (complexId) params = params.set('complex_id', complexId);
     return this.http.get<RentedUnit[]>(`${this.base}/rented`, { params });
+  }
+
+  priceDrops(leaseTerm?: number | null, complexId?: number | null): Observable<PriceDrop[]> {
+    let params = new HttpParams();
+    if (leaseTerm && leaseTerm !== 15) params = params.set('lease_term', leaseTerm);
+    if (complexId) params = params.set('complex_id', complexId);
+    return this.http.get<PriceDrop[]>(`${this.base}/price-drops`, { params });
   }
 
   stats(): Observable<Stats[]> {

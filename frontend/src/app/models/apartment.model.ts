@@ -86,6 +86,18 @@ export interface DisplayFloorPlan extends FloorPlan {
   display_max: number;
 }
 
+export interface PriceDrop {
+  complex_id: number;
+  floorplan_name: string;
+  best_unit_id: string;
+  current_min: number;
+  baseline_min: number;
+  cumulative_drop: number;
+  drop_pct: number;
+  direction: 'drop' | 'increase';
+  first_seen: string;
+}
+
 export interface Stats {
   complex_id: number;
   complex_name: string;

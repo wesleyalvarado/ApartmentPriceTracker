@@ -7,7 +7,7 @@ import { ApiService } from '../../services/api.service';
 import { FloorPlanCardComponent } from '../floor-plan-card/floor-plan-card.component';
 import { FilterBarComponent } from '../filter-bar/filter-bar.component';
 import {
-  Complex, FloorPlan, Unit, PricePoint, RentedUnit,
+  Complex, FloorPlan, Unit, PricePoint, RentedUnit, PriceDrop,
   DisplayUnit, DisplayFloorPlan, StatusValue,
   BedroomOption, LeaseTermOption, ComplexOption, AvailabilityOption, StatusOption,
 } from '../../models/apartment.model';
@@ -120,6 +120,7 @@ import {
               [chartOptions]="chartOptions"
               [showComplexBadge]="showComplexBadge()"
               [selectedStatus]="selectedStatus()"
+              [priceDrop]="priceDropMap().get(planKey(fp)) ?? null"
               (toggleRequested)="togglePlan($event)"
             />
           }
@@ -151,6 +152,7 @@ export class DashboardComponent implements OnInit {
   expandedUnits         = signal<Unit[]>([]);
   loadingUnits          = signal(false);
   rentedUnits           = signal<RentedUnit[]>([]);
+  priceDropMap          = signal<Map<string, PriceDrop>>(new Map());
   selectedStatus        = signal<StatusValue>('available');
   availableLeaseTerms   = signal<number[]>([14, 6, 5, 4]);
   chartData             = signal<any>(null);
@@ -320,6 +322,7 @@ export class DashboardComponent implements OnInit {
     this._loadLeaseTerms();
     this._loadFloorPlans();
     this._loadRented();
+    this._loadPriceDrops();
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────
@@ -328,12 +331,14 @@ export class DashboardComponent implements OnInit {
     this._collapseExpanded();
     this._loadLeaseTerms();
     this._loadFloorPlans();
+    this._loadPriceDrops();
   }
 
   onLeaseTermChange(term: number) {
     this.selectedLeaseTerm.set(term);
     this._collapseExpanded();
     this._loadFloorPlans();
+    this._loadPriceDrops();
   }
 
   planKey(fp: FloorPlan): string {
@@ -358,22 +363,20 @@ export class DashboardComponent implements OnInit {
       this.loadingUnits.set(false);
     });
 
-    if (term === 15) {
-      this.api.floorPlanHistory(fp.floorplan_name, 60, fp.complex_id).subscribe(history => {
-        if (history.length >= 2) {
-          this.chartData.set({
-            labels: history.map(h => new Date(h.scraped_at).toLocaleDateString()),
-            datasets: [{
-              data: history.map(h => h.min_price),
-              borderColor: '#2B5741',
-              backgroundColor: 'rgba(43,87,65,.1)',
-              borderWidth: 2, fill: true, tension: 0.4,
-              pointBackgroundColor: '#2B5741', pointRadius: 4,
-            }],
-          });
-        }
-      });
-    }
+    this.api.floorPlanHistory(fp.floorplan_name, 60, fp.complex_id).subscribe(history => {
+      if (history.length >= 2) {
+        this.chartData.set({
+          labels: history.map(h => new Date(h.scraped_at).toLocaleDateString()),
+          datasets: [{
+            data: history.map(h => h.min_price),
+            borderColor: '#2B5741',
+            backgroundColor: 'rgba(43,87,65,.1)',
+            borderWidth: 2, fill: true, tension: 0.4,
+            pointBackgroundColor: '#2B5741', pointRadius: 4,
+          }],
+        });
+      }
+    });
   }
 
   // ── Private ────────────────────────────────────────────────────────────────
@@ -399,6 +402,19 @@ export class DashboardComponent implements OnInit {
     this.api.rented(null, 14).subscribe({
       next:  units => this.rentedUnits.set(units),
       error: ()    => this.rentedUnits.set([]),
+    });
+  }
+
+  private _loadPriceDrops() {
+    this.api.priceDrops(this.selectedLeaseTerm(), this.selectedComplexId()).subscribe({
+      next: drops => {
+        const map = new Map<string, PriceDrop>();
+        for (const d of drops) {
+          map.set(`${d.complex_id}:${d.floorplan_name}`, d);
+        }
+        this.priceDropMap.set(map);
+      },
+      error: () => this.priceDropMap.set(new Map()),
     });
   }
 

@@ -64,6 +64,12 @@ export interface RentedUnit {
 
 export type StatusValue = 'available' | 'rented' | 'all';
 
+export interface BedroomOption      { label: string; value: number | null; }
+export interface LeaseTermOption    { label: string; value: number; }
+export interface ComplexOption      { label: string; value: number | null; }
+export interface AvailabilityOption { label: string; value: number | null; }
+export interface StatusOption       { label: string; value: StatusValue; }
+
 export interface DisplayUnit {
   unit_id: string;
   floor: number | null;

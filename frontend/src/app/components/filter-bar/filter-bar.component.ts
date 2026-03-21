@@ -5,10 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { SelectButtonModule } from 'primeng/selectbutton';
 
 import {
+  StatusValue,
   BedroomOption, LeaseTermOption, ComplexOption,
   AvailabilityOption, StatusOption,
-} from '../../services/dashboard-state.service';
-import { StatusValue } from '../../models/apartment.model';
+} from '../../models/apartment.model';
 
 @Component({
   selector: 'app-filter-bar',

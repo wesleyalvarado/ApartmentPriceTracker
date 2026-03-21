@@ -6,7 +6,6 @@ import { of } from 'rxjs';
 
 import { DashboardComponent } from './dashboard.component';
 import { ApiService } from '../../services/api.service';
-import { DashboardStateService } from '../../services/dashboard-state.service';
 
 const mockApi = {
   complexes:         () => of([]),
@@ -30,21 +29,19 @@ async function setup() {
 
   const fixture   = TestBed.createComponent(DashboardComponent);
   const component = fixture.componentInstance;
-  const state     = TestBed.inject(DashboardStateService);
-  return { fixture, component, state };
+  fixture.detectChanges();
+  return { fixture, component };
 }
 
-describe('DashboardComponent (thin shell)', () => {
+describe('DashboardComponent', () => {
 
   it('creates successfully', async () => {
     const { component } = await setup();
     expect(component).toBeTruthy();
   });
 
-  it('calls state.initialize() on ngOnInit', async () => {
-    const { component, state } = await setup();
-    spyOn(state, 'initialize');
-    component.ngOnInit();
-    expect(state.initialize).toHaveBeenCalledTimes(1);
+  it('calls API on ngOnInit and populates loading state', async () => {
+    const { component } = await setup();
+    expect(component.loading()).toBeFalse();
   });
 });

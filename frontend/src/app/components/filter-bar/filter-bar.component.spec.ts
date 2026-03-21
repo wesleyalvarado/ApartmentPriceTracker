@@ -5,7 +5,7 @@ import { FilterBarComponent } from './filter-bar.component';
 import {
   BedroomOption, LeaseTermOption, ComplexOption,
   AvailabilityOption, StatusOption,
-} from '../../services/dashboard-state.service';
+} from '../../models/apartment.model';
 
 const BEDROOM_OPTIONS: BedroomOption[] = [
   { label: 'All', value: null }, { label: 'Studio', value: 0 },

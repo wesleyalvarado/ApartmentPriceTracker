@@ -44,13 +44,8 @@ import { DisplayFloorPlan, DisplayUnit, StatusValue } from '../../models/apartme
         </ng-template>
 
         <div class="card-body">
-          <div class="card-price">
-            \${{ fp.display_min | number }}
-            @if (fp.display_max > fp.display_min) {
-              <span class="card-price-max"> – \${{ fp.display_max | number }}</span>
-            }
-          </div>
-          <div class="card-price-label">/ month{{ fp.display_max > fp.display_min ? '' : ' starting' }}</div>
+          <div class="card-price">\${{ fp.display_min | number }}</div>
+          <div class="card-price-label">/ mo</div>
 
           <div class="card-specs">
             <span>

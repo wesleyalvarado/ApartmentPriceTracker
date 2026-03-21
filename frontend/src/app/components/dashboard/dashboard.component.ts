@@ -152,7 +152,7 @@ export class DashboardComponent implements OnInit {
   loadingUnits          = signal(false);
   rentedUnits           = signal<RentedUnit[]>([]);
   selectedStatus        = signal<StatusValue>('available');
-  availableLeaseTerms   = signal<number[]>([15, 14, 6, 5, 4]);
+  availableLeaseTerms   = signal<number[]>([14, 6, 5, 4]);
   chartData             = signal<any>(null);
 
   // ── Static options ─────────────────────────────────────────────────────────
@@ -172,7 +172,6 @@ export class DashboardComponent implements OnInit {
   ];
 
   readonly allLeaseTermOptions: LeaseTermOption[] = [
-    { label: '15 mo', value: 15 },
     { label: '14 mo', value: 14 },
     { label: '6 mo',  value: 6 },
     { label: '5 mo',  value: 5 },
@@ -375,11 +374,9 @@ export class DashboardComponent implements OnInit {
   // ── Private ────────────────────────────────────────────────────────────────
   private _loadLeaseTerms() {
     this.api.leaseTerms(this.selectedComplexId()).subscribe(terms => {
-      const show15   = this.selectedComplexId() === null || terms.includes(14);
-      const allTerms = show15 ? [15, ...terms] : terms;
-      this.availableLeaseTerms.set(allTerms);
-      if (!allTerms.includes(this.selectedLeaseTerm())) {
-        this.selectedLeaseTerm.set(allTerms[0]);
+      this.availableLeaseTerms.set(terms);
+      if (!terms.includes(this.selectedLeaseTerm())) {
+        this.selectedLeaseTerm.set(terms[0]);
         this._loadFloorPlans();
       }
     });

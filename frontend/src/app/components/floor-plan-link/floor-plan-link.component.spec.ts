@@ -48,10 +48,17 @@ describe('FloorPlanLinkComponent', () => {
       );
     });
 
-    it('builds SkyHouse URL without floor param (url_floor is always null)', async () => {
+    it('returns fixed SkyHouse URL regardless of slug or url_floor', async () => {
       const { component } = await setup(makeFp({ complex_id: 2, complex_name: 'SkyHouse Dallas', floorplan_slug: 'b', url_floor: null }));
       expect(component.url).toBe(
-        'https://www.simpsonpropertygroup.com/apartments/dallas-texas/skyhouse-dallas-victory-park-downtown/apartment-floor-plans/b'
+        'https://www.simpsonpropertygroup.com/apartments/dallas-texas/skyhouse-dallas-victory-park-downtown/apartment-floor-plans/#plan'
+      );
+    });
+
+    it('returns same fixed SkyHouse URL for a different slug', async () => {
+      const { component } = await setup(makeFp({ complex_id: 2, floorplan_slug: 'c2-c3' }));
+      expect(component.url).toBe(
+        'https://www.simpsonpropertygroup.com/apartments/dallas-texas/skyhouse-dallas-victory-park-downtown/apartment-floor-plans/#plan'
       );
     });
   });

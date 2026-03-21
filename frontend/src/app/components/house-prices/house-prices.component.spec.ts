@@ -94,23 +94,6 @@ describe('HousePricesComponent', () => {
     expect(component.zhviChartData()).toBeNull();
   });
 
-  it('affordability returns a result with valid inputs', async () => {
-    const { component } = await setup();
-    const result = component.affordability();
-    expect(result).not.toBeNull();
-    expect(result!.maxPrice).toBeGreaterThan(0);
-    expect(result!.downAmount).toBeGreaterThan(0);
-    expect(result!.loanAmount).toBeGreaterThan(0);
-  });
-
-  it('affordability maxPrice increases when budget increases', async () => {
-    const { component } = await setup();
-    const low  = component.affordability()!.maxPrice;
-    component.maxMonthly.set(5000);
-    const high = component.affordability()!.maxPrice;
-    expect(high).toBeGreaterThan(low);
-  });
-
   it('selectedHomeType defaults to all_middle_tier', async () => {
     const { component } = await setup();
     expect(component.selectedHomeType()).toBe('all_middle_tier');
@@ -119,6 +102,11 @@ describe('HousePricesComponent', () => {
   it('selectedMonths defaults to 24', async () => {
     const { component } = await setup();
     expect(component.selectedMonths()).toBe(24);
+  });
+
+  it('renders app-affordability-calculator component', async () => {
+    const { fixture } = await setup();
+    expect(fixture.nativeElement.querySelector('app-affordability-calculator')).not.toBeNull();
   });
 
   it('redfinTableRows returns empty when redfin signal is empty', async () => {
@@ -149,23 +137,6 @@ describe('HousePricesComponent', () => {
     expect(component.formatK(1000000)).toBe('1000K');
   });
 
-  // ── signal defaults ────────────────────────────────────────────────────────
-
-  it('mortgageRate defaults to 6.3', async () => {
-    const { component } = await setup();
-    expect(component.mortgageRate()).toBe(6.3);
-  });
-
-  it('downPct defaults to 20', async () => {
-    const { component } = await setup();
-    expect(component.downPct()).toBe(20);
-  });
-
-  it('maxMonthly defaults to 3500', async () => {
-    const { component } = await setup();
-    expect(component.maxMonthly()).toBe(3500);
-  });
-
   // ── onHomeTypeChange / onMonthsChange ──────────────────────────────────────
 
   it('onHomeTypeChange updates selectedHomeType signal', async () => {
@@ -190,41 +161,6 @@ describe('HousePricesComponent', () => {
     const { component } = await setup();
     component.onMonthsChange(60);
     expect(component.selectedMonths()).toBe(60);
-  });
-
-  // ── affordability edge cases ───────────────────────────────────────────────
-
-  it('affordability returns null when budget is at or below insurance cost', async () => {
-    const { component } = await setup();
-    component.maxMonthly.set(175); // equal to insMonthly
-    expect(component.affordability()).toBeNull();
-  });
-
-  it('affordability returns null when mortgage rate is 0', async () => {
-    const { component } = await setup();
-    component.mortgageRate.set(0);
-    expect(component.affordability()).toBeNull();
-  });
-
-  it('affordability maxPrice decreases when rate increases', async () => {
-    const { component } = await setup();
-    component.mortgageRate.set(5);
-    const low = component.affordability()!.maxPrice;
-    component.mortgageRate.set(8);
-    const high = component.affordability()!.maxPrice;
-    expect(low).toBeGreaterThan(high);
-  });
-
-  it('affordability downAmount equals maxPrice * downPct / 100', async () => {
-    const { component } = await setup();
-    const a = component.affordability()!;
-    expect(a.downAmount).toBeCloseTo(a.maxPrice * 0.2, -2);
-  });
-
-  it('affordability loanAmount equals maxPrice minus downAmount', async () => {
-    const { component } = await setup();
-    const a = component.affordability()!;
-    expect(a.loanAmount).toBeCloseTo(a.maxPrice - a.downAmount, -1);
   });
 
   // ── latestRedfin — picks latest per zip ───────────────────────────────────

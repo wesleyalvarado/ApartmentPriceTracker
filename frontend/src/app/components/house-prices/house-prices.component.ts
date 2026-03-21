@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core'; // computed used by zhviChartData, latestRedfin, redfinTableRows
 import { CommonModule } from '@angular/common';
 import { ChartModule } from 'primeng/chart';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -7,11 +7,12 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { ApiService } from '../../services/api.service';
 import { HousePriceSummary, ZhviPoint, RedfinPoint } from '../../models/apartment.model';
+import { AffordabilityCalculatorComponent } from '../affordability-calculator/affordability-calculator.component';
 
 @Component({
   selector: 'app-house-prices',
   standalone: true,
-  imports: [CommonModule, ChartModule, SkeletonModule, CardModule, TooltipModule],
+  imports: [CommonModule, ChartModule, SkeletonModule, CardModule, TooltipModule, AffordabilityCalculatorComponent],
   styleUrl: './house-prices.component.scss',
   template: `
     <!-- Header -->
@@ -110,48 +111,7 @@ import { HousePriceSummary, ZhviPoint, RedfinPoint } from '../../models/apartmen
         </div>
 
         <!-- Affordability Calculator -->
-        <div class="hp-card calc-card">
-          <div class="section-label"><i class="pi pi-calculator"></i> Affordability Calculator</div>
-          <div class="calc-body">
-            <div class="calc-row">
-              <label>Monthly budget</label>
-              <div class="calc-input-wrap">
-                <span>$</span>
-                <input type="number"
-                       [value]="maxMonthly()"
-                       (input)="maxMonthly.set(+$any($event.target).value)"
-                       min="1000" max="10000" step="100" />
-              </div>
-            </div>
-            <div class="calc-row">
-              <label>Rate (%)</label>
-              <input type="number"
-                     [value]="mortgageRate()"
-                     (input)="mortgageRate.set(+$any($event.target).value)"
-                     min="2" max="12" step="0.1" />
-            </div>
-            <div class="calc-row">
-              <label>Down (%)</label>
-              <input type="number"
-                     [value]="downPct()"
-                     (input)="downPct.set(+$any($event.target).value)"
-                     min="3" max="50" step="1" />
-            </div>
-            @if (affordability(); as a) {
-              <div class="calc-result">
-                <div class="calc-max-price">\${{ a.maxPrice | number }}</div>
-                <div class="calc-max-label">Max purchase price</div>
-                <div class="calc-breakdown">
-                  <span>P&amp;I \${{ a.monthlyPI | number }}</span>
-                  <span>Tax \${{ a.monthlyTax | number }}</span>
-                  <span>Ins \${{ a.insMonthly | number }}</span>
-                </div>
-                <div class="calc-down">Down \${{ a.downAmount | number }} · Loan \${{ a.loanAmount | number }}</div>
-              </div>
-            }
-            <div class="calc-note">30yr fixed · Dallas Co 2.2% tax · ~\$175/mo insurance</div>
-          </div>
-        </div>
+        <app-affordability-calculator />
       </div>
 
       <!-- Redfin latest metrics -->
@@ -189,11 +149,6 @@ export class HousePricesComponent implements OnInit {
 
   selectedHomeType = signal('all_middle_tier');
   selectedMonths   = signal(24);
-
-  // Affordability calculator
-  maxMonthly   = signal(3500);
-  mortgageRate = signal(6.3);
-  downPct      = signal(20);
 
   readonly homeTypeOptions = [
     { label: 'All Homes',  value: 'all_middle_tier' },
@@ -324,28 +279,6 @@ export class HousePricesComponent implements OnInit {
         }),
       },
     ];
-  });
-
-  affordability = computed(() => {
-    const budget = this.maxMonthly();
-    const rate   = this.mortgageRate();
-    const down   = this.downPct();
-    const taxRate    = 2.2;
-    const insMonthly = 175;
-    if (budget <= insMonthly || rate <= 0 || down < 0 || down >= 100) return null;
-    const r      = (rate / 100) / 12;
-    const n      = 360;
-    const factor = (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-    const coeff  = (1 - down / 100) * factor + (taxRate / 100 / 12);
-    const maxPrice = (budget - insMonthly) / coeff;
-    return {
-      maxPrice:   Math.round(maxPrice),
-      downAmount: Math.round(maxPrice * down / 100),
-      loanAmount: Math.round(maxPrice * (1 - down / 100)),
-      monthlyPI:  Math.round(maxPrice * (1 - down / 100) * factor),
-      monthlyTax: Math.round(maxPrice * taxRate / 100 / 12),
-      insMonthly,
-    };
   });
 
   ngOnInit(): void {

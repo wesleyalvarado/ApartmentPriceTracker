@@ -584,15 +584,22 @@ def get_rented(
     Returns each unit with the date it was last seen (i.e., likely rented).
     """
     with get_db() as conn:
-        ts = latest_ts(conn, complex_id)
-        complex_filter = "AND complex_id = :cid" if complex_id else ""
+        complex_where = "WHERE complex_id = :cid" if complex_id else ""
         rows = conn.execute(
             f"""
-            WITH latest_units AS (
-                SELECT unit_id
+            WITH complex_latest AS (
+                -- per-complex latest scrape timestamp
+                SELECT complex_id, MAX(scraped_at) AS latest_ts
                 FROM price_snapshots
-                WHERE scraped_at = :ts
-                  {complex_filter}
+                {complex_where}
+                GROUP BY complex_id
+            ),
+            latest_units AS (
+                -- units present in each complex's own latest scrape
+                SELECT p.unit_id, p.complex_id
+                FROM price_snapshots p
+                JOIN complex_latest cl
+                  ON p.complex_id = cl.complex_id AND p.scraped_at = cl.latest_ts
             )
             SELECT
                 p.unit_id,
@@ -603,14 +610,16 @@ def get_rented(
                 p.available_date    AS last_available_date,
                 DATE(MAX(p.scraped_at)) AS last_seen
             FROM price_snapshots p
-            WHERE p.scraped_at >= datetime(:ts, :lookback)
-              AND p.scraped_at < :ts
-              AND p.unit_id NOT IN (SELECT unit_id FROM latest_units)
-              {complex_filter}
+            JOIN complex_latest cl ON p.complex_id = cl.complex_id
+            LEFT JOIN latest_units lu
+              ON p.unit_id = lu.unit_id AND p.complex_id = lu.complex_id
+            WHERE p.scraped_at >= datetime(cl.latest_ts, :lookback)
+              AND p.scraped_at < cl.latest_ts
+              AND lu.unit_id IS NULL
             GROUP BY p.unit_id, p.floorplan_name
             ORDER BY p.floorplan_name, p.unit_id
             """,
-            {"ts": ts, "cid": complex_id, "lookback": f"-{days} days"},
+            {"cid": complex_id, "lookback": f"-{days} days"},
         ).fetchall()
     return rows_to_list(rows)
 

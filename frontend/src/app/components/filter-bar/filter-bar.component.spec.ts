@@ -130,4 +130,34 @@ describe('FilterBarComponent', () => {
     component.complexChange.emit(1);
     expect(emitted).toBe(1);
   });
+
+  it('shows "0 floor plans" when planCount is 0', async () => {
+    const { fixture } = await setup({ planCount: 0 });
+    const badge = fixture.nativeElement.querySelector('.filter-count-badge');
+    expect(badge.textContent.trim()).toBe('0 floor plans');
+  });
+
+  it('emits null from bedroomChange when "All" is selected', async () => {
+    const { component } = await setup();
+    let emitted: number | null | undefined;
+    component.bedroomChange.subscribe(v => emitted = v);
+    component.bedroomChange.emit(null);
+    expect(emitted).toBeNull();
+  });
+
+  it('emits null from availabilityChange when "Any" is selected', async () => {
+    const { component } = await setup();
+    let emitted: number | null | undefined;
+    component.availabilityChange.subscribe(v => emitted = v);
+    component.availabilityChange.emit(null);
+    expect(emitted).toBeNull();
+  });
+
+  it('emits null from complexChange when "All" is selected', async () => {
+    const { component } = await setup({ complexOptions: COMPLEX_OPTIONS_3 });
+    let emitted: number | null | undefined;
+    component.complexChange.subscribe(v => emitted = v);
+    component.complexChange.emit(null);
+    expect(emitted).toBeNull();
+  });
 });

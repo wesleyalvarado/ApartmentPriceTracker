@@ -93,6 +93,50 @@ cd frontend && ng serve
 
 ---
 
+## Manual Refresh Runbook
+
+### Every time you open the dashboard
+
+Always run apartment scrapers to get current pricing before checking the dashboard:
+
+```bash
+cd scraper/camden_greenville && python scraper.py
+cd scraper/camden_greenville && python lease_terms.py
+cd scraper/skyhouse_dallas && python scraper.py
+cd scraper/skyhouse_dallas && python lease_terms.py
+```
+
+**Verify after each refresh:**
+- [ ] All expected complexes appear (Camden Greenville + SkyHouse Dallas)
+- [ ] Floor plan count looks right per complex (~10–15 plans each)
+- [ ] Price change badges reflect the current lease term filter
+- [ ] Rented units section shows recently disappeared units (if any)
+- [ ] Availability dates are current (not stale from weeks ago)
+
+### Weekly (Mondays) — Redfin data
+
+Redfin publishes new market data every Monday. Run after the apartments refresh:
+
+```bash
+python scraper/house_prices/ingest_redfin.py
+```
+
+> Warning: ~500 MB download. Streams and filters to 3 zips — takes a few minutes.
+
+**Verify:** House Prices tab → Redfin metrics table shows a `period_begin` date from the current week.
+
+### Monthly (after the 15th) — Zillow ZHVI data
+
+Zillow publishes updated ZHVI estimates mid-month. Only run once the new month's data is out:
+
+```bash
+python scraper/house_prices/ingest_zhvi.py --all-types
+```
+
+**Verify:** House Prices tab → ZHVI trend chart has a data point for the current month.
+
+---
+
 ## Data Refresh
 
 ### Apartment pricing — run on demand or schedule daily

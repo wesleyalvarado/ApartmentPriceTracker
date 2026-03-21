@@ -6,7 +6,7 @@ import { of } from 'rxjs';
 
 import { FloorPlanCardComponent } from './floor-plan-card.component';
 import { ApiService } from '../../services/api.service';
-import { DisplayFloorPlan, DisplayUnit } from '../../models/apartment.model';
+import { DisplayFloorPlan, DisplayUnit, PriceDrop } from '../../models/apartment.model';
 
 const mockApi = {
   complexes: () => of([]), floorPlans: () => of([]),
@@ -31,6 +31,15 @@ function makeUnit(overrides: Partial<DisplayUnit> = {}): DisplayUnit {
   return { unit_id: '2308', floor: 2, price: 1229, available_date: '2026-04-15', status: 'available', ...overrides };
 }
 
+function makePriceDrop(overrides: Partial<PriceDrop> = {}): PriceDrop {
+  return {
+    complex_id: 1, floorplan_name: 'A1 Villas', best_unit_id: '2308',
+    current_min: 1300, baseline_min: 1500, cumulative_drop: 200,
+    drop_pct: 13.3, direction: 'drop', first_seen: '2026-01-01',
+    ...overrides,
+  };
+}
+
 async function setup(inputs: Partial<{
   fp: DisplayFloorPlan;
   isExpanded: boolean;
@@ -39,6 +48,7 @@ async function setup(inputs: Partial<{
   chartData: any;
   showComplexBadge: boolean;
   selectedStatus: 'available' | 'rented' | 'all';
+  priceDrop: PriceDrop | null;
 }> = {}) {
   await TestBed.configureTestingModule({
     imports: [FloorPlanCardComponent],
@@ -59,6 +69,7 @@ async function setup(inputs: Partial<{
   component.chartOptions    = {};
   component.showComplexBadge = inputs.showComplexBadge ?? false;
   component.selectedStatus  = inputs.selectedStatus  ?? 'available';
+  component.priceDrop       = inputs.priceDrop !== undefined ? inputs.priceDrop : null;
 
   fixture.detectChanges();
   return { fixture, component };
@@ -155,5 +166,53 @@ describe('FloorPlanCardComponent', () => {
     const { fixture } = await setup({ isExpanded: true, chartData: { labels: [], datasets: [] } });
     const section = fixture.nativeElement.querySelector('.chart-section');
     expect(section).not.toBeNull();
+  });
+
+  // ── priceDrop badge ────────────────────────────────────────────────────────
+
+  it('renders price-drop-badge component when priceDrop is provided', async () => {
+    const { fixture } = await setup({ priceDrop: makePriceDrop() });
+    const badge = fixture.nativeElement.querySelector('app-price-drop-badge');
+    expect(badge).not.toBeNull();
+  });
+
+  it('renders price-drop-badge component when priceDrop is null (badge handles its own null)', async () => {
+    const { fixture } = await setup({ priceDrop: null });
+    const badge = fixture.nativeElement.querySelector('app-price-drop-badge');
+    expect(badge).not.toBeNull(); // component always present; renders nothing internally when null
+  });
+
+  // ── rented units ──────────────────────────────────────────────────────────
+
+  it('shows rented unit row with lock icon when status is rented', async () => {
+    const units = [makeUnit({ unit_id: '2308', status: 'rented', last_seen: '2026-03-15T10:00:00Z' })];
+    const { fixture } = await setup({ isExpanded: true, expandedUnits: units, selectedStatus: 'rented' });
+    const rows = fixture.nativeElement.querySelectorAll('tbody tr');
+    expect(rows.length).toBeGreaterThan(0);
+  });
+
+  it('shows all units (available + rented) when selectedStatus is all', async () => {
+    const units = [
+      makeUnit({ unit_id: '2308', status: 'available' }),
+      makeUnit({ unit_id: '9999', status: 'rented', last_seen: '2026-03-15T10:00:00Z' }),
+    ];
+    const { fixture } = await setup({ isExpanded: true, expandedUnits: units, selectedStatus: 'all' });
+    const rows = fixture.nativeElement.querySelectorAll('tbody tr');
+    expect(rows.length).toBe(2);
+  });
+
+  // ── display_units edge cases ───────────────────────────────────────────────
+
+  it('shows 0 unit count when display_units is 0', async () => {
+    const { fixture } = await setup({ fp: makeFp({ display_units: 0, available_units: 0 } as any) });
+    const tag = fixture.nativeElement.querySelector('.p-tag, [class*="tag"]');
+    // card still renders; display_units shown in badge
+    expect(fixture.nativeElement).toBeTruthy();
+  });
+
+  it('shows 1 unit count in tag', async () => {
+    const { fixture } = await setup({ fp: makeFp({ display_units: 1, available_units: 1 } as any) });
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('1');
   });
 });

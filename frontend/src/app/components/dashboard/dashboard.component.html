@@ -5,48 +5,47 @@
       <div class="header-logo">AP</div>
       <div>
         <div class="header-title">Apartment Price Tracker</div>
-        <div class="header-sub">{{ headerSubtitle() }}</div>
+        <div class="header-sub">{{ state.headerSubtitle() }}</div>
       </div>
     </div>
 
-    @if (lastScraped()) {
+    @if (state.lastScraped()) {
       <div class="header-meta">
         <i class="pi pi-refresh"></i>
-        Last scraped {{ lastScraped() | date:'MMM d, h:mm a' }}
+        Last scraped {{ state.lastScraped() | date:'MMM d, h:mm a' }}
       </div>
     }
   </div>
 </header>
 
 <!-- ── Summary bar ──────────────────────────────────────────────────────────── -->
-@if (!loading()) {
+@if (!state.loading()) {
   <div class="stats-bar">
     <div class="stat-item">
-      <div class="stat-value">{{ totalUnits() }}</div>
+      <div class="stat-value">{{ state.totalUnits() }}</div>
       <div class="stat-label">Units</div>
     </div>
     <div class="stat-divider"></div>
     <div class="stat-item">
-      <div class="stat-value">${{ cheapestUnit()?.display_min | number }}</div>
+      <div class="stat-value">${{ state.cheapestUnit()?.display_min | number }}</div>
       <div class="stat-label">Starting From</div>
     </div>
     <div class="stat-divider"></div>
     <div class="stat-item">
-      <div class="stat-value">{{ displayFiltered().length }}</div>
+      <div class="stat-value">{{ state.displayFiltered().length }}</div>
       <div class="stat-label">Floor Plans</div>
     </div>
     <div class="stat-divider"></div>
     <div class="stat-item">
       <div class="stat-value">
-        @if (selectedComplexId() === null && complexes().length > 1) {
-          {{ complexes().length }} Complexes
+        @if (state.selectedComplexId() === null && state.complexes().length > 1) {
+          {{ state.complexes().length }} Complexes
         } @else {
           Studio · 1BR · 2BR
         }
       </div>
-
       <div class="stat-label">
-        @if (selectedComplexId() === null && complexes().length > 1) {
+        @if (state.selectedComplexId() === null && state.complexes().length > 1) {
           Tracked
         } @else {
           Available Types
@@ -60,77 +59,27 @@
 <main class="main-content">
 
   <!-- Filters -->
-  <div class="filters-panel">
-    <div class="filters-body">
-
-      @if (complexOptions().length > 2) {
-        <div class="filter-group">
-          <span class="filter-label">Property</span>
-          <p-selectbutton
-            [options]="complexOptions()"
-            [(ngModel)]="selectedComplexIdModel"
-            [ngModelOptions]="{standalone: true}"
-            (onChange)="onComplexChange($event.value)"
-            optionLabel="label"
-            optionValue="value"
-          />
-        </div>
-      }
-
-      <div class="filter-group">
-        <span class="filter-label">Bedrooms</span>
-        <p-selectbutton
-          [options]="bedroomOptions"
-          [(ngModel)]="selectedBedrooms"
-          [ngModelOptions]="{standalone: true}"
-          (onChange)="selectedBedrooms.set($event.value)"
-          optionLabel="label"
-          optionValue="value"
-        />
-      </div>
-
-      <div class="filter-group">
-        <span class="filter-label">Available From</span>
-        <p-selectbutton
-          [options]="availabilityOptions"
-          [(ngModel)]="selectedAvailabilityModel"
-          [ngModelOptions]="{standalone: true}"
-          optionLabel="label"
-          optionValue="value"
-        />
-      </div>
-
-      <div class="filter-group">
-        <span class="filter-label">Lease Term</span>
-        <p-selectbutton
-          [options]="leaseTermOptions()"
-          [(ngModel)]="selectedLeaseTermModel"
-          [ngModelOptions]="{standalone: true}"
-          (onChange)="onLeaseTermChange($event.value)"
-          optionLabel="label"
-          optionValue="value"
-        />
-      </div>
-
-      <div class="filter-group">
-        <span class="filter-label">Status</span>
-        <p-selectbutton
-          [options]="statusOptions"
-          [(ngModel)]="selectedStatusModel"
-          [ngModelOptions]="{standalone: true}"
-          optionLabel="label"
-          optionValue="value"
-        />
-      </div>
-
-    </div>
-    <div class="filter-count-badge">
-      {{ displayFiltered().length }} floor plan{{ displayFiltered().length !== 1 ? 's' : '' }}
-    </div>
-  </div>
+  <app-filter-bar
+    [complexOptions]="state.complexOptions()"
+    [bedroomOptions]="state.bedroomOptions"
+    [availabilityOptions]="state.availabilityOptions"
+    [leaseTermOptions]="state.leaseTermOptions()"
+    [statusOptions]="state.statusOptions"
+    [selectedComplexId]="state.selectedComplexId()"
+    [selectedBedrooms]="state.selectedBedrooms()"
+    [selectedAvailability]="state.selectedAvailability()"
+    [selectedLeaseTerm]="state.selectedLeaseTerm()"
+    [selectedStatus]="state.selectedStatus()"
+    [planCount]="state.displayFiltered().length"
+    (complexChange)="state.onComplexChange($event)"
+    (bedroomChange)="state.selectedBedrooms.set($event)"
+    (availabilityChange)="state.selectedAvailability.set($event)"
+    (leaseTermChange)="state.onLeaseTermChange($event)"
+    (statusChange)="state.selectedStatus.set($event)"
+  />
 
   <!-- Loading skeletons -->
-  @if (loading()) {
+  @if (state.loading()) {
     <div class="grid">
       @for (i of [1,2,3,4,5,6]; track i) {
         <div class="card-wrapper">
@@ -141,163 +90,23 @@
   }
 
   <!-- Floor plan cards -->
-  @if (!loading()) {
+  @if (!state.loading()) {
     <div class="grid">
-      @for (fp of displayFiltered(); track planKey(fp)) {
-        <div class="card-wrapper">
-          <p-card
-            [styleClass]="'fp-card ' + (expandedPlan() === planKey(fp) ? 'fp-card--expanded' : '')"
-            (click)="togglePlan(fp)"
-          >
-            <ng-template #header>
-              <div class="card-header-band">
-                <div class="card-header-left">
-                  <span class="card-plan-name">{{ fp.floorplan_name }}</span>
-                  @if (showComplexBadge()) {
-                    <span class="complex-badge">{{ fp.complex_name }}</span>
-                  }
-                </div>
-                <p-tag
-                  [value]="fp.display_units + (fp.display_units === 1 ? ' unit' : ' units')"
-                  severity="success"
-                  [rounded]="true"
-                />
-              </div>
-            </ng-template>
-
-            <div class="card-body">
-              <div class="card-price">
-                ${{ fp.display_min | number }}
-                @if (fp.display_max > fp.display_min) {
-                  <span class="card-price-max"> – ${{ fp.display_max | number }}</span>
-                }
-              </div>
-              <div class="card-price-label">/ month{{ fp.display_max > fp.display_min ? '' : ' starting' }}</div>
-
-              <div class="card-specs">
-                <span>
-                  <i class="pi pi-home"></i>
-                  {{ bedroomLabel(fp.bedrooms) }}
-                </span>
-                <span>
-                  <i class="pi pi-droplet"></i>
-                  {{ fp.bathrooms }} Bath{{ fp.bathrooms !== 1 ? 's' : '' }}
-                </span>
-                <span>
-                  <i class="pi pi-expand"></i>
-                  {{ fp.sqft | number }} sqft
-                </span>
-              </div>
-
-              @if (fp.earliest_available) {
-                <div class="card-avail">
-                  <i class="pi pi-calendar"></i>
-                  Available {{ formatDate(fp.earliest_available) }}
-                </div>
-              }
-
-              @if (fp.special_tags) {
-                <div class="card-tags">
-                  @for (tag of fp.special_tags.split(','); track tag) {
-                    <p-chip [label]="tag.trim()" styleClass="tag-chip" />
-                  }
-                </div>
-              }
-            </div>
-
-            <ng-template #footer>
-              <div class="card-footer">
-                <span>{{ expandedPlan() === planKey(fp) ? 'Hide units' : 'View all units' }}</span>
-                <i class="pi" [class.pi-chevron-down]="expandedPlan() !== planKey(fp)"
-                             [class.pi-chevron-up]="expandedPlan() === planKey(fp)"></i>
-              </div>
-            </ng-template>
-          </p-card>
-
-          <!-- Expanded unit panel -->
-          @if (expandedPlan() === planKey(fp)) {
-            <div class="unit-panel" (click)="$event.stopPropagation()">
-
-              <!-- Price history chart -->
-              @if (chartData()) {
-                <div class="chart-section">
-                  <div class="section-label">
-                    <i class="pi pi-chart-line"></i> Price History
-                  </div>
-                  <div class="chart-container">
-                    <p-chart type="line" [data]="chartData()" [options]="chartOptions" height="160px" />
-                  </div>
-                </div>
-                <p-divider />
-              } @else {
-                <div class="chart-placeholder">
-                  <i class="pi pi-info-circle"></i>
-                  Price history chart will appear after multiple scrape runs.
-                </div>
-              }
-
-              <!-- Floor plan image -->
-              @if (fp.image_url) {
-                <div class="floorplan-image-section">
-                  <div class="section-label">
-                    <i class="pi pi-image"></i> Floor Plan Layout
-                  </div>
-                  <img [src]="fp.image_url" alt="{{ fp.floorplan_name }} layout" class="floorplan-img" />
-                </div>
-                <p-divider />
-              }
-
-              <!-- Units table -->
-              <div class="section-label">
-                <i class="pi pi-list"></i> Available Units
-              </div>
-
-              @if (loadingUnits()) {
-                <p-skeleton height="120px" />
-              } @else {
-                <p-table
-                  [value]="expandedDisplayUnits()"
-                  [tableStyle]="{'min-width': '100%'}"
-                  styleClass="p-datatable-sm"
-                >
-                  <ng-template #header>
-                    <tr>
-                      <th>Unit</th>
-                      <th>Floor</th>
-                      <th>Price/mo</th>
-                      <th>Date</th>
-                    </tr>
-                  </ng-template>
-                  <ng-template #body let-unit>
-                    <tr [class.unit-row--rented]="unit.status === 'rented'">
-                      <td class="unit-id-cell">
-                        <span class="unit-badge" [class.unit-badge--rented]="unit.status === 'rented'">{{ unit.unit_id }}</span>
-                      </td>
-                      <td class="floor-cell">{{ unit.floor ?? '—' }}</td>
-                      <td [class.price-cell]="unit.status === 'available'" [class.price-cell--rented]="unit.status === 'rented'">
-                        ${{ unit.price | number }}
-                      </td>
-                      <td>
-                        @if (unit.status === 'rented') {
-                          <span class="rented-label">
-                            <i class="pi pi-lock"></i>
-                            Rented · {{ unit.last_seen | date:'MMM d' }}
-                          </span>
-                        } @else {
-                          {{ formatDate(unit.available_date) }}
-                        }
-                      </td>
-                    </tr>
-                  </ng-template>
-                </p-table>
-              }
-            </div>
-          }
-        </div>
+      @for (fp of state.displayFiltered(); track state.planKey(fp)) {
+        <app-floor-plan-card
+          [fp]="fp"
+          [isExpanded]="state.expandedPlan() === state.planKey(fp)"
+          [loadingUnits]="state.loadingUnits()"
+          [expandedUnits]="state.expandedDisplayUnits()"
+          [chartData]="state.chartData()"
+          [chartOptions]="state.chartOptions"
+          [showComplexBadge]="state.showComplexBadge()"
+          [selectedStatus]="state.selectedStatus()"
+          (toggleRequested)="state.togglePlan($event)"
+        />
       }
     </div>
   }
-
 
 </main>
 

@@ -62,6 +62,23 @@ export interface RentedUnit {
   last_seen: string;
 }
 
+export type StatusValue = 'available' | 'rented' | 'all';
+
+export interface DisplayUnit {
+  unit_id: string;
+  floor: number | null;
+  price: number;
+  available_date: string | null;
+  status: 'available' | 'rented';
+  last_seen?: string;
+}
+
+export interface DisplayFloorPlan extends FloorPlan {
+  display_units: number;
+  display_min: number;
+  display_max: number;
+}
+
 export interface Stats {
   complex_id: number;
   complex_name: string;

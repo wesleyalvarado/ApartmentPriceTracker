@@ -574,6 +574,47 @@ def get_alerts(
     return {"threshold": max_price, "matches": rows_to_list(rows)}
 
 
+@app.get("/api/rented")
+def get_rented(
+    complex_id: Optional[int] = Query(None, description="Filter by complex ID"),
+    days: int = Query(14, ge=1, le=90, description="Look back N days for rented units"),
+):
+    """
+    Units that appeared in a previous scrape but are absent from the latest scrape.
+    Returns each unit with the date it was last seen (i.e., likely rented).
+    """
+    with get_db() as conn:
+        ts = latest_ts(conn, complex_id)
+        complex_filter = "AND complex_id = :cid" if complex_id else ""
+        rows = conn.execute(
+            f"""
+            WITH latest_units AS (
+                SELECT unit_id
+                FROM price_snapshots
+                WHERE scraped_at = :ts
+                  {complex_filter}
+            )
+            SELECT
+                p.unit_id,
+                p.floorplan_name,
+                p.floor,
+                p.bedrooms,
+                p.price             AS last_price,
+                p.available_date    AS last_available_date,
+                DATE(MAX(p.scraped_at)) AS last_seen
+            FROM price_snapshots p
+            WHERE p.scraped_at >= datetime(:ts, :lookback)
+              AND p.scraped_at < :ts
+              AND p.unit_id NOT IN (SELECT unit_id FROM latest_units)
+              {complex_filter}
+            GROUP BY p.unit_id, p.floorplan_name
+            ORDER BY p.floorplan_name, p.unit_id
+            """,
+            {"ts": ts, "cid": complex_id, "lookback": f"-{days} days"},
+        ).fetchall()
+    return rows_to_list(rows)
+
+
 @app.get("/health")
 def health():
     """Quick liveness check."""

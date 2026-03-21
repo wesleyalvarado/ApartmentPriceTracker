@@ -23,7 +23,7 @@
   <div class="stats-bar">
     <div class="stat-item">
       <div class="stat-value">{{ totalUnits() }}</div>
-      <div class="stat-label">Available Units</div>
+      <div class="stat-label">Units</div>
     </div>
     <div class="stat-divider"></div>
     <div class="stat-item">
@@ -106,6 +106,17 @@
           [(ngModel)]="selectedLeaseTermModel"
           [ngModelOptions]="{standalone: true}"
           (onChange)="onLeaseTermChange($event.value)"
+          optionLabel="label"
+          optionValue="value"
+        />
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Status</span>
+        <p-selectbutton
+          [options]="statusOptions"
+          [(ngModel)]="selectedStatusModel"
+          [ngModelOptions]="{standalone: true}"
           optionLabel="label"
           optionValue="value"
         />
@@ -244,7 +255,7 @@
                 <p-skeleton height="120px" />
               } @else {
                 <p-table
-                  [value]="expandedUnits()"
+                  [value]="expandedDisplayUnits()"
                   [tableStyle]="{'min-width': '100%'}"
                   styleClass="p-datatable-sm"
                 >
@@ -253,17 +264,28 @@
                       <th>Unit</th>
                       <th>Floor</th>
                       <th>Price/mo</th>
-                      <th>Available</th>
+                      <th>Date</th>
                     </tr>
                   </ng-template>
                   <ng-template #body let-unit>
-                    <tr>
+                    <tr [class.unit-row--rented]="unit.status === 'rented'">
                       <td class="unit-id-cell">
-                        <span class="unit-badge">{{ unit.unit_id }}</span>
+                        <span class="unit-badge" [class.unit-badge--rented]="unit.status === 'rented'">{{ unit.unit_id }}</span>
                       </td>
                       <td class="floor-cell">{{ unit.floor ?? '—' }}</td>
-                      <td class="price-cell">${{ unit.price | number }}</td>
-                      <td>{{ formatDate(unit.available_date) }}</td>
+                      <td [class.price-cell]="unit.status === 'available'" [class.price-cell--rented]="unit.status === 'rented'">
+                        ${{ unit.price | number }}
+                      </td>
+                      <td>
+                        @if (unit.status === 'rented') {
+                          <span class="rented-label">
+                            <i class="pi pi-lock"></i>
+                            Rented · {{ unit.last_seen | date:'MMM d' }}
+                          </span>
+                        } @else {
+                          {{ formatDate(unit.available_date) }}
+                        }
+                      </td>
                     </tr>
                   </ng-template>
                 </p-table>
@@ -274,6 +296,7 @@
       }
     </div>
   }
+
 
 </main>
 

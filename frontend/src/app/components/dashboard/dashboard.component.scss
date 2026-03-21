@@ -383,6 +383,27 @@
   font-size: .85rem;
 }
 
+/* ── Rented unit rows (inline in unit table) ─────────────────────────────── */
+.unit-row--rented td { opacity: .6; }
+.unit-badge--rented {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+.price-cell--rented {
+  font-weight: 700;
+  color: var(--camden-muted);
+  font-size: 1rem;
+}
+.rented-label {
+  font-size: .8rem;
+  color: var(--camden-muted);
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+
+  .pi { font-size: .75rem; }
+}
+
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 .footer {
   text-align: center;

@@ -14,12 +14,22 @@ import { DividerModule } from 'primeng/divider';
 import { ChartModule } from 'primeng/chart';
 
 import { ApiService } from '../../services/api.service';
-import { Complex, FloorPlan, Unit, PricePoint } from '../../models/apartment.model';
+import { Complex, FloorPlan, Unit, PricePoint, RentedUnit } from '../../models/apartment.model';
 
 interface BedroomOption      { label: string; value: number | null; }
 interface LeaseTermOption    { label: string; value: number; }
 interface ComplexOption      { label: string; value: number | null; }
 interface AvailabilityOption { label: string; value: number | null; }
+interface StatusOption       { label: string; value: 'available' | 'rented' | 'all'; }
+
+interface DisplayUnit {
+  unit_id: string;
+  floor: number | null;
+  price: number;
+  available_date: string | null;
+  status: 'available' | 'rented';
+  last_seen?: string;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -44,16 +54,25 @@ export class DashboardComponent implements OnInit {
   selectedLeaseTerm    = signal<number>(15);
   selectedAvailability = signal<number | null>(null);
   selectedComplexId = signal<number | null>(null);
-  expandedPlan      = signal<string | null>(null);  // key: "complexId:planName"
-  expandedUnits     = signal<Unit[]>([]);
-  expandedHistory   = signal<PricePoint[]>([]);
-  loadingUnits      = signal(false);
+  expandedPlan          = signal<string | null>(null);  // key: "complexId:planName"
+  expandedFloorPlanName = signal<string | null>(null);
+  expandedUnits         = signal<Unit[]>([]);
+  expandedHistory       = signal<PricePoint[]>([]);
+  loadingUnits          = signal(false);
+  rentedUnits           = signal<RentedUnit[]>([]);
+  selectedStatus        = signal<'available' | 'rented' | 'all'>('available');
 
   bedroomOptions: BedroomOption[] = [
     { label: 'All',    value: null },
     { label: 'Studio', value: 0 },
     { label: '1 BR',   value: 1 },
     { label: '2 BR',   value: 2 },
+  ];
+
+  statusOptions: StatusOption[] = [
+    { label: 'Available', value: 'available' },
+    { label: 'Rented',    value: 'rented' },
+    { label: 'All',       value: 'all' },
   ];
 
   availabilityOptions: AvailabilityOption[] = [
@@ -93,6 +112,9 @@ export class DashboardComponent implements OnInit {
 
   get selectedAvailabilityModel(): number | null { return this.selectedAvailability(); }
   set selectedAvailabilityModel(v: number | null) { this.selectedAvailability.set(v); }
+
+  get selectedStatusModel(): 'available' | 'rented' | 'all' { return this.selectedStatus(); }
+  set selectedStatusModel(v: 'available' | 'rented' | 'all') { this.selectedStatus.set(v); }
 
   // ── Derived ────────────────────────────────────────────────────────────────
   filtered = computed(() => {
@@ -142,6 +164,27 @@ export class DashboardComponent implements OnInit {
     return cx ? cx.display_name : 'Dallas, TX';
   });
 
+  expandedDisplayUnits = computed<DisplayUnit[]>(() => {
+    const status  = this.selectedStatus();
+    const fpName  = this.expandedFloorPlanName();
+
+    const available: DisplayUnit[] = this.expandedUnits().map(u => ({
+      unit_id: u.unit_id, floor: u.floor, price: u.price,
+      available_date: u.available_date, status: 'available',
+    }));
+
+    const rented: DisplayUnit[] = this.rentedUnits()
+      .filter(r => r.floorplan_name === fpName)
+      .map(r => ({
+        unit_id: r.unit_id, floor: r.floor, price: r.last_price,
+        available_date: r.last_available_date, status: 'rented', last_seen: r.last_seen,
+      }));
+
+    if (status === 'available') return available;
+    if (status === 'rented')    return rented;
+    return [...available, ...rented];
+  });
+
   // Chart data
   chartData = signal<any>(null);
   chartOptions: any = {
@@ -171,6 +214,7 @@ export class DashboardComponent implements OnInit {
     this.api.complexes().subscribe(complexes => this.complexes.set(complexes));
     this._loadLeaseTerms();
     this._loadFloorPlans();
+    this._loadRented();
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────
@@ -198,6 +242,7 @@ export class DashboardComponent implements OnInit {
       return;
     }
     this.expandedPlan.set(key);
+    this.expandedFloorPlanName.set(fp.floorplan_name);
     this.loadingUnits.set(true);
     this.expandedUnits.set([]);
     this.chartData.set(null);
@@ -245,6 +290,7 @@ export class DashboardComponent implements OnInit {
 
   private _collapseExpanded() {
     this.expandedPlan.set(null);
+    this.expandedFloorPlanName.set(null);
     this.expandedUnits.set([]);
     this.chartData.set(null);
   }
@@ -254,6 +300,13 @@ export class DashboardComponent implements OnInit {
     this.api.floorPlans(this.selectedLeaseTerm(), this.selectedComplexId()).subscribe({
       next: fps => { this.floorPlans.set(fps); this.loading.set(false); },
       error: () => this.loading.set(false),
+    });
+  }
+
+  private _loadRented() {
+    this.api.rented(null, 14).subscribe({
+      next: units => this.rentedUnits.set(units),
+      error: () => this.rentedUnits.set([]),
     });
   }
 

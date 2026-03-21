@@ -52,6 +52,16 @@ export interface PricePoint {
   unit_count?: number;
 }
 
+export interface RentedUnit {
+  unit_id: string;
+  floorplan_name: string;
+  floor: number | null;
+  bedrooms: number;
+  last_price: number;
+  last_available_date: string | null;
+  last_seen: string;
+}
+
 export interface Stats {
   complex_id: number;
   complex_name: string;

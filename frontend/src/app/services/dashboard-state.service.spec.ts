@@ -22,7 +22,8 @@ describe('DashboardStateService', () => {
     it('returns — for null',                  () => expect(setup().formatDate(null)).toBe('—'));
     it('returns Available Now for past dates', () => expect(setup().formatDate('2020-01-01')).toBe('Available Now'));
     it('returns Available Now for today',     () => {
-      const today = new Date().toISOString().slice(0, 10);
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       expect(setup().formatDate(today)).toBe('Available Now');
     });
     it('returns formatted date for future dates', () => {

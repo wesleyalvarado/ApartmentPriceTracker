@@ -12,7 +12,9 @@ export class DashboardStateService {
   formatDate(iso: string | null): string {
     if (!iso) return '—';
     const d = new Date(iso + 'T00:00:00');
-    if (d <= new Date()) return 'Available Now';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (d <= today) return 'Available Now';
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 }

@@ -16,7 +16,73 @@ import {
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, SkeletonModule, FloorPlanCardComponent, FilterBarComponent],
-  styleUrl: './dashboard.component.scss',
+  styles: [`
+    .header {
+      background: var(--camden-green);
+      color: white;
+      padding: 0 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo {
+      width: 40px; height: 40px; border-radius: 8px;
+      background: rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1rem; letter-spacing: .02em; flex-shrink: 0;
+    }
+    .header-title { font-size: 1.1rem; font-weight: 700; letter-spacing: .01em; }
+    .header-sub { font-size: .75rem; opacity: .7; margin-top: 1px; }
+    .header-meta {
+      font-size: .8rem; opacity: .75;
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    @media (max-width: 480px) {
+      .header { padding: 0 1rem; }
+      .header-meta { display: none; }
+    }
+
+    .stats-bar {
+      background: var(--camden-surface);
+      border-bottom: 1px solid var(--camden-border);
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: 0; padding: 0;
+    }
+    .stat-item { text-align: center; padding: 1rem 2.5rem; }
+    .stat-value { font-size: 1.4rem; font-weight: 700; color: var(--camden-green); }
+    .stat-label {
+      font-size: .72rem; color: var(--camden-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-top: 2px;
+    }
+    .stat-divider { width: 1px; height: 40px; background: var(--camden-border); }
+    @media (max-width: 600px) {
+      .stats-bar { display: grid; grid-template-columns: 1fr 1fr; padding: .25rem 0; gap: 0; }
+      .stat-item { padding: .75rem 0; width: 50%; }
+      .stat-divider { display: none; }
+      .stat-value { font-size: 1.2rem; }
+    }
+
+    .main-content { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+    @media (max-width: 600px) { .main-content { padding: 1rem .75rem 3rem; } }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; gap: .85rem; } }
+
+    .footer {
+      text-align: center; font-size: .75rem; color: var(--camden-muted);
+      padding: 1.5rem; border-top: 1px solid var(--camden-border);
+    }
+  `],
   template: `
     <!-- ── Header ── -->
     <header class="header">

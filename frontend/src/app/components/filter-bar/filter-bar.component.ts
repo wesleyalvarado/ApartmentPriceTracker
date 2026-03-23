@@ -14,7 +14,41 @@ import {
   selector: 'app-filter-bar',
   standalone: true,
   imports: [CommonModule, FormsModule, SelectButtonModule],
-  styleUrl: './filter-bar.component.scss',
+  styles: [`
+    .filters-panel {
+      background: var(--camden-surface);
+      border: 1px solid var(--camden-border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.75rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+    .filters-body { display: flex; align-items: flex-end; gap: 2rem; flex-wrap: wrap; }
+    .filter-group { display: flex; flex-direction: column; gap: .5rem; }
+    .filter-label {
+      font-size: .72rem; font-weight: 700; color: var(--camden-muted);
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+    .filter-count-badge {
+      font-size: .8rem; font-weight: 600; color: var(--camden-green);
+      background: var(--camden-green-pale);
+      padding: .35rem .9rem; border-radius: 20px;
+      white-space: nowrap; align-self: flex-end;
+    }
+    @media (max-width: 600px) {
+      .filters-panel { flex-direction: column; align-items: stretch; padding: 1rem; gap: 1rem; }
+      .filters-body { gap: 1rem; }
+      .filter-count-badge { align-self: flex-start; }
+      :host ::ng-deep .filter-group .p-selectbutton {
+        display: flex; flex-wrap: nowrap; overflow-x: auto;
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      }
+      :host ::ng-deep .filter-group .p-selectbutton::-webkit-scrollbar { display: none; }
+    }
+  `],
   template: `
     <div class="filters-panel">
       <div class="filters-body">

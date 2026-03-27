@@ -64,12 +64,14 @@ export interface RentedUnit {
 }
 
 export type StatusValue = 'available' | 'rented' | 'all';
+export type SortValue  = 'price_asc' | 'price_desc' | 'date_asc' | 'date_desc';
 
 export interface BedroomOption      { label: string; value: number | null; }
 export interface LeaseTermOption    { label: string; value: number; }
 export interface ComplexOption      { label: string; value: number | null; }
 export interface AvailabilityOption { label: string; value: number | null; }
 export interface StatusOption       { label: string; value: StatusValue; }
+export interface SortOption         { label: string; value: SortValue; }
 
 export interface DisplayUnit {
   unit_id: string;

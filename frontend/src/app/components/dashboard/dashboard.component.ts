@@ -8,8 +8,8 @@ import { FloorPlanCardComponent } from '../floor-plan-card/floor-plan-card.compo
 import { FilterBarComponent } from '../filter-bar/filter-bar.component';
 import {
   Complex, FloorPlan, Unit, PricePoint, RentedUnit, PriceDrop,
-  DisplayUnit, DisplayFloorPlan, StatusValue,
-  BedroomOption, LeaseTermOption, ComplexOption, AvailabilityOption, StatusOption,
+  DisplayUnit, DisplayFloorPlan, StatusValue, SortValue,
+  BedroomOption, LeaseTermOption, ComplexOption, AvailabilityOption, StatusOption, SortOption,
 } from '../../models/apartment.model';
 
 @Component({
@@ -160,6 +160,9 @@ import {
         (availabilityChange)="selectedAvailability.set($event)"
         (leaseTermChange)="onLeaseTermChange($event)"
         (statusChange)="selectedStatus.set($event)"
+        [sortOptions]="sortOptions"
+        [selectedSort]="selectedSort()"
+        (sortChange)="selectedSort.set($event)"
       />
 
       <!-- Loading skeletons -->
@@ -220,6 +223,7 @@ export class DashboardComponent implements OnInit {
   rentedUnits           = signal<RentedUnit[]>([]);
   priceDropMap          = signal<Map<string, PriceDrop>>(new Map());
   selectedStatus        = signal<StatusValue>('available');
+  selectedSort          = signal<SortValue>('price_asc');
   availableLeaseTerms   = signal<number[]>([14, 6, 5, 4]);
   chartData             = signal<any>(null);
 
@@ -250,6 +254,13 @@ export class DashboardComponent implements OnInit {
     { label: 'Available', value: 'available' },
     { label: 'Rented',    value: 'rented' },
     { label: 'All',       value: 'all' },
+  ];
+
+  readonly sortOptions: SortOption[] = [
+    { label: 'Price ↑',  value: 'price_asc' },
+    { label: 'Price ↓',  value: 'price_desc' },
+    { label: 'Date ↑',   value: 'date_asc' },
+    { label: 'Date ↓',   value: 'date_desc' },
   ];
 
   readonly chartOptions: any = {
@@ -322,9 +333,10 @@ export class DashboardComponent implements OnInit {
 
   displayFiltered = computed<DisplayFloorPlan[]>(() => {
     const status    = this.selectedStatus();
+    const sort      = this.selectedSort();
     const rentedMap = this.rentedByFloorPlan();
 
-    return this.filtered().map(fp => {
+    const plans = this.filtered().map(fp => {
       const rented       = rentedMap.get(fp.floorplan_name) ?? [];
       const rentedPrices = rented.map(r => r.last_price);
       const rentedMin    = rentedPrices.length ? Math.min(...rentedPrices) : null;
@@ -342,8 +354,24 @@ export class DashboardComponent implements OnInit {
       } else {
         return { ...fp, display_units: fp.available_units, display_min: fp.min_price, display_max: fp.max_price };
       }
-    }).filter(fp => fp.display_units > 0)
-      .sort((a, b) => a.display_min - b.display_min);
+    }).filter(fp => fp.display_units > 0);
+
+    return plans.sort((a, b) => {
+      switch (sort) {
+        case 'price_asc':  return a.display_min - b.display_min;
+        case 'price_desc': return b.display_min - a.display_min;
+        case 'date_asc': {
+          const da = a.earliest_available ?? '9999-12-31';
+          const db = b.earliest_available ?? '9999-12-31';
+          return da < db ? -1 : da > db ? 1 : 0;
+        }
+        case 'date_desc': {
+          const da = a.earliest_available ?? '';
+          const db = b.earliest_available ?? '';
+          return da > db ? -1 : da < db ? 1 : 0;
+        }
+      }
+    });
   });
 
   totalUnits = computed(() =>

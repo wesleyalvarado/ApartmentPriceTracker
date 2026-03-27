@@ -5,9 +5,9 @@ import { FormsModule } from '@angular/forms';
 import { SelectButtonModule } from 'primeng/selectbutton';
 
 import {
-  StatusValue,
+  StatusValue, SortValue,
   BedroomOption, LeaseTermOption, ComplexOption,
-  AvailabilityOption, StatusOption,
+  AvailabilityOption, StatusOption, SortOption,
 } from '../../models/apartment.model';
 
 @Component({
@@ -115,6 +115,18 @@ import {
           />
         </div>
 
+        <div class="filter-group">
+          <span class="filter-label">Sort</span>
+          <p-selectbutton
+            [options]="sortOptions"
+            [ngModel]="selectedSort"
+            (ngModelChange)="sortChange.emit($event)"
+            [ngModelOptions]="{standalone: true}"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+
       </div>
       <div class="filter-count-badge">
         {{ planCount }} floor plan{{ planCount !== 1 ? 's' : '' }}
@@ -134,6 +146,8 @@ export class FilterBarComponent {
   @Input({ required: true }) selectedAvailability!: number | null;
   @Input({ required: true }) selectedLeaseTerm!: number;
   @Input({ required: true }) selectedStatus!: StatusValue;
+  @Input({ required: true }) sortOptions!: SortOption[];
+  @Input({ required: true }) selectedSort!: SortValue;
 
   @Input({ required: true }) planCount!: number;
 
@@ -142,4 +156,5 @@ export class FilterBarComponent {
   @Output() availabilityChange = new EventEmitter<number | null>();
   @Output() leaseTermChange    = new EventEmitter<number>();
   @Output() statusChange       = new EventEmitter<StatusValue>();
+  @Output() sortChange         = new EventEmitter<SortValue>();
 }

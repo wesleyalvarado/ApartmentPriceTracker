@@ -54,7 +54,7 @@ def ingest() -> None:
 
     inserted = 0
     for row in reader:
-        region = row.get("region", "")
+        region = row.get("REGION", "")
         # Region may be "Zip Code: 75206" or just "75206"
         zip_code = region.replace("Zip Code: ", "").strip()
         if zip_code not in TARGET_ZIPS:
@@ -70,16 +70,16 @@ def ingest() -> None:
             """,
             (
                 zip_code,
-                row.get("period_begin", ""),
-                row.get("period_end", ""),
-                safe_float(row.get("median_sale_price")),
-                safe_float(row.get("median_list_price")),
-                safe_int(row.get("homes_sold")),
-                safe_int(row.get("new_listings")),
-                safe_int(row.get("inventory")),
-                safe_float(row.get("days_on_market")),
-                safe_float(row.get("avg_sale_to_list")),
-                safe_float(row.get("median_ppsf")),
+                row.get("PERIOD_BEGIN", ""),
+                row.get("PERIOD_END", ""),
+                safe_float(row.get("MEDIAN_SALE_PRICE")),
+                safe_float(row.get("MEDIAN_LIST_PRICE")),
+                safe_int(row.get("HOMES_SOLD")),
+                safe_int(row.get("NEW_LISTINGS")),
+                safe_int(row.get("INVENTORY")),
+                safe_float(row.get("MEDIAN_DOM")),
+                safe_float(row.get("AVG_SALE_TO_LIST")),
+                safe_float(row.get("MEDIAN_PPSF")),
             ),
         )
         inserted += cur.rowcount

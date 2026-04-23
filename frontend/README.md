@@ -22,7 +22,6 @@ ng build                         # dev build
 ng build --configuration=production  # prod build (swaps in environment.prod.ts)
 ```
 
-To switch to the FastAPI backend, change `apiBase` in `src/environments/environment.ts` to `http://localhost:8000/api` and restart `ng serve`.
 
 ## Structure
 

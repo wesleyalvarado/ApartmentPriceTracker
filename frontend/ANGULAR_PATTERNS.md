@@ -132,7 +132,7 @@ Key types:
 
 ## ApiService
 
-Base URL: `http://localhost:8000/api`
+Base URL: `http://localhost:8001/api` (configured in `src/environments/environment.ts`)
 
 - All methods return `Observable<T>` via `HttpClient`
 - `lease_term` param is **omitted** when value is `15` (default/any)

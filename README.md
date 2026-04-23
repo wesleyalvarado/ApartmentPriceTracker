@@ -35,8 +35,7 @@ House prices tracked for zip codes: **75206** (M Streets), **75214** (Lakewood),
 |-------|-----------|
 | Scraper | Python · `requests` · `BeautifulSoup` · GraphQL |
 | Database | SQLite (`data/apartments.db`) |
-| Backend (primary) | FastAPI · Python · raw SQL via `sqlite3` stdlib · port 8000 |
-| Backend (Java) | Spring Boot 3.4 · Java 21 · Spring Data JPA · Hibernate SQLite dialect · Lombok · port 8001 |
+| Backend | Spring Boot 3.4 · Java 21 · Spring Data JPA · Hibernate SQLite dialect · Lombok · port 8001 |
 | Frontend | Angular 20 · PrimeNG v20 · Tailwind v4 · Chart.js |
 | Tests | Jasmine · Karma (58 tests) |
 
@@ -60,8 +59,6 @@ AptPricing/
 │       ├── migrate.py            # Creates ZHVI/Redfin tables; seeds zip metadata
 │       ├── ingest_zhvi.py        # Downloads Zillow ZHVI CSV (run monthly)
 │       └── ingest_redfin.py      # Streams Redfin weekly data ~500 MB (run weekly)
-├── api/
-│   └── main.py                   # FastAPI app — all endpoints (port 8000)
 ├── api-java/
 │   ├── pom.xml                   # Spring Boot 3.4 + JPA + Hibernate SQLite + Lombok
 │   └── src/main/java/com/aptpricing/
@@ -92,8 +89,6 @@ AptPricing/
 
 ## Running Locally
 
-The frontend is wired to the **Java backend (port 8001)**. Run both together:
-
 ```bash
 # Terminal 1 — Java backend (requires Java 21 + Maven via sdkman)
 source "$HOME/.sdkman/bin/sdkman-init.sh"   # if sdkman not on PATH yet
@@ -105,7 +100,7 @@ cd frontend && ng serve
 # → http://localhost:4200  (calls :8001)
 ```
 
-**First time only — install Java + Maven via sdkman:**
+**First time only — install Java 21 + Maven via sdkman:**
 ```bash
 curl -s "https://get.sdkman.io" | bash
 source "$HOME/.sdkman/bin/sdkman-init.sh"
@@ -113,10 +108,26 @@ sdk install java 21.0.7-tem
 sdk install maven
 ```
 
-**To use the FastAPI backend instead** (port 8000), start it and change `apiBase` in `frontend/src/environments/environment.ts` to `http://localhost:8000/api`:
+---
+
+## Scheduling
+
+The Java backend runs the scrapers automatically via `@Scheduled`. When the server is running, it fires every day at **8:00 AM** local time:
+
+1. `scraper/camden_greenville/scraper.py`
+2. `scraper/camden_greenville/lease_terms.py`
+3. `scraper/skyhouse_dallas/scraper.py`
+4. `scraper/skyhouse_dallas/lease_terms.py`
+
+Scraper output is streamed to the Spring Boot log. To change the schedule, set the `SCRAPER_CRON` environment variable (standard 6-field Spring cron: `seconds minutes hours day month weekday`):
+
 ```bash
-cd api && uvicorn main:app --reload
-# → http://localhost:8000
+SCRAPER_CRON="0 0 9 * * *" mvn spring-boot:run   # shift to 9am
+```
+
+To change the scraper path (e.g. if running the JAR from a different directory):
+```bash
+SCRAPER_PATH=/absolute/path/to/scraper java -jar api-java/target/api-java-1.0.0.jar
 ```
 
 ---
@@ -269,7 +280,7 @@ cd frontend && ng test --watch=false --browsers=ChromeHeadless
 
 ## What's Next
 
-- **Scheduling** — macOS launchd: apartments daily, ZHVI monthly, Redfin weekly
+- **Scheduling** — `@Scheduled` in Spring Boot already fires the scrapers daily at 8am; wire ZHVI/Redfin ingestion the same way or add launchd jobs
 - **Price alerts** — Notify when a unit drops below a target price (`price_alerts` table already exists)
 - **More complexes** — Add a new scraper in `scraper/<slug>/` and the frontend picks it up automatically
 - **OpenAPI docs** — Add `springdoc-openapi` to the Java backend for auto-generated Swagger UI

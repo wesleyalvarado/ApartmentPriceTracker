@@ -36,7 +36,7 @@ House prices tracked for zip codes: **75206** (M Streets), **75214** (Lakewood),
 | Scraper | Python · `requests` · `BeautifulSoup` · GraphQL |
 | Database | SQLite (`data/apartments.db`) |
 | Backend (primary) | FastAPI · Python · raw SQL via `sqlite3` stdlib · port 8000 |
-| Backend (Java) | Spring Boot 3.4 · Java 21 · `NamedParameterJdbcTemplate` · port 8001 |
+| Backend (Java) | Spring Boot 3.4 · Java 21 · Spring Data JPA · Hibernate SQLite dialect · Lombok · port 8001 |
 | Frontend | Angular 20 · PrimeNG v20 · Tailwind v4 · Chart.js |
 | Tests | Jasmine · Karma (58 tests) |
 
@@ -63,11 +63,15 @@ AptPricing/
 ├── api/
 │   └── main.py                   # FastAPI app — all endpoints (port 8000)
 ├── api-java/
-│   ├── pom.xml                   # Spring Boot 3.4 + sqlite-jdbc dependencies
+│   ├── pom.xml                   # Spring Boot 3.4 + JPA + Hibernate SQLite + Lombok
 │   └── src/main/java/com/aptpricing/
 │       ├── AptPricingApplication.java
-│       ├── config/WebConfig.java # CORS config
-│       └── controller/           # One controller per concern (see java_implementation.md)
+│       ├── config/WebConfig.java     # CORS config
+│       ├── controller/               # Thin HTTP layer — one controller per concern
+│       ├── service/                  # Business logic (ComplexService, ApartmentService, etc.)
+│       ├── repository/               # Spring Data JPA repos with native query projections
+│       ├── entity/                   # JPA entities (Complex, PriceSnapshot, LeaseTermPrice, FloorplanMeta)
+│       └── dto/                      # Java 21 records — typed response shapes
 └── frontend/
     └── src/app/
         ├── app.ts                # Root — nav tabs + router-outlet
@@ -114,8 +118,6 @@ sdk install maven
 cd api && uvicorn main:app --reload
 # → http://localhost:8000
 ```
-
-> See [java_implementation.md](java_implementation.md) for the full Spring Boot concept guide.
 
 ---
 
@@ -261,7 +263,7 @@ cd scraper/skyhouse_dallas && python lease_terms.py
 cd frontend && ng test --watch=false --browsers=ChromeHeadless
 ```
 
-58 tests across: `ApiService`, `DashboardStateService`, `DashboardComponent`, `FilterBarComponent`, `FloorPlanCardComponent`, `FloorPlanLinkComponent`.
+168 tests across: `ApiService`, `DashboardStateService`, `DashboardComponent`, `FilterBarComponent`, `FloorPlanCardComponent`, `FloorPlanLinkComponent`.
 
 ---
 
@@ -270,4 +272,4 @@ cd frontend && ng test --watch=false --browsers=ChromeHeadless
 - **Scheduling** — macOS launchd: apartments daily, ZHVI monthly, Redfin weekly
 - **Price alerts** — Notify when a unit drops below a target price (`price_alerts` table already exists)
 - **More complexes** — Add a new scraper in `scraper/<slug>/` and the frontend picks it up automatically
-- **Java API** — Wire Angular frontend to port 8001; add OpenAPI docs via `springdoc-openapi`
+- **OpenAPI docs** — Add `springdoc-openapi` to the Java backend for auto-generated Swagger UI

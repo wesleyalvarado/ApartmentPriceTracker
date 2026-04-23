@@ -5,6 +5,7 @@ SKYHOUSE_SPEC.md
 APARTMENT_SEARCH.md
 RENEWAL_NEGOTIATION.md
 queries/negotiation_check.sql
+java_implementation.md
 
 # ── Scraped data (generated, not for repo) ───────────────────────────────────
 data/*.db

@@ -2,11 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Complex, FloorPlan, Unit, PricePoint, Stats, RentedUnit, PriceDrop, HousePriceSummary, ZhviPoint, RedfinPoint } from '../models/apartment.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8000/api';
+  private base = environment.apiBase;
 
   complexes(): Observable<Complex[]> {
     return this.http.get<Complex[]>(`${this.base}/complexes`);

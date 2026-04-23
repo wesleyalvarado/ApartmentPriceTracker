@@ -35,7 +35,8 @@ House prices tracked for zip codes: **75206** (M Streets), **75214** (Lakewood),
 |-------|-----------|
 | Scraper | Python · `requests` · `BeautifulSoup` · GraphQL |
 | Database | SQLite (`data/apartments.db`) |
-| Backend | FastAPI · Python · raw SQL via `sqlite3` stdlib |
+| Backend (primary) | FastAPI · Python · raw SQL via `sqlite3` stdlib · port 8000 |
+| Backend (Java) | Spring Boot 3.4 · Java 21 · `NamedParameterJdbcTemplate` · port 8001 |
 | Frontend | Angular 20 · PrimeNG v20 · Tailwind v4 · Chart.js |
 | Tests | Jasmine · Karma (58 tests) |
 
@@ -60,7 +61,13 @@ AptPricing/
 │       ├── ingest_zhvi.py        # Downloads Zillow ZHVI CSV (run monthly)
 │       └── ingest_redfin.py      # Streams Redfin weekly data ~500 MB (run weekly)
 ├── api/
-│   └── main.py                   # FastAPI app — all endpoints
+│   └── main.py                   # FastAPI app — all endpoints (port 8000)
+├── api-java/
+│   ├── pom.xml                   # Spring Boot 3.4 + sqlite-jdbc dependencies
+│   └── src/main/java/com/aptpricing/
+│       ├── AptPricingApplication.java
+│       ├── config/WebConfig.java # CORS config
+│       └── controller/           # One controller per concern (see java_implementation.md)
 └── frontend/
     └── src/app/
         ├── app.ts                # Root — nav tabs + router-outlet
@@ -81,15 +88,34 @@ AptPricing/
 
 ## Running Locally
 
-```bash
-# 1. Start the API
-cd api && uvicorn main:app --reload
-# http://localhost:8000
+The frontend is wired to the **Java backend (port 8001)**. Run both together:
 
-# 2. Start the frontend
+```bash
+# Terminal 1 — Java backend (requires Java 21 + Maven via sdkman)
+source "$HOME/.sdkman/bin/sdkman-init.sh"   # if sdkman not on PATH yet
+cd api-java && mvn spring-boot:run
+# → http://localhost:8001
+
+# Terminal 2 — Angular frontend
 cd frontend && ng serve
-# http://localhost:4200
+# → http://localhost:4200  (calls :8001)
 ```
+
+**First time only — install Java + Maven via sdkman:**
+```bash
+curl -s "https://get.sdkman.io" | bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+sdk install java 21.0.7-tem
+sdk install maven
+```
+
+**To use the FastAPI backend instead** (port 8000), start it and change `apiBase` in `frontend/src/environments/environment.ts` to `http://localhost:8000/api`:
+```bash
+cd api && uvicorn main:app --reload
+# → http://localhost:8000
+```
+
+> See [java_implementation.md](java_implementation.md) for the full Spring Boot concept guide.
 
 ---
 
@@ -244,3 +270,4 @@ cd frontend && ng test --watch=false --browsers=ChromeHeadless
 - **Scheduling** — macOS launchd: apartments daily, ZHVI monthly, Redfin weekly
 - **Price alerts** — Notify when a unit drops below a target price (`price_alerts` table already exists)
 - **More complexes** — Add a new scraper in `scraper/<slug>/` and the frontend picks it up automatically
+- **Java API** — Wire Angular frontend to port 8001; add OpenAPI docs via `springdoc-openapi`

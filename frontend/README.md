@@ -12,12 +12,17 @@ Angular 20 dashboard for the Apartment Price Tracker. See the [root README](../R
 
 ## Development
 
+The API base URL is configured in `src/environments/environment.ts`. It currently points to the Java backend on port **8001**.
+
 ```bash
 npm install
-ng serve        # http://localhost:4200 — requires API running on :8000
+ng serve        # http://localhost:4200 — requires Java backend running on :8001
 ng test --watch=false --browsers=ChromeHeadless
-ng build
+ng build                         # dev build
+ng build --configuration=production  # prod build (swaps in environment.prod.ts)
 ```
+
+To switch to the FastAPI backend, change `apiBase` in `src/environments/environment.ts` to `http://localhost:8000/api` and restart `ng serve`.
 
 ## Structure
 

@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 
-const BASE = 'http://localhost:8000/api';
+const BASE = 'http://localhost:8001/api';
 
 describe('ApiService', () => {
   let service: ApiService;

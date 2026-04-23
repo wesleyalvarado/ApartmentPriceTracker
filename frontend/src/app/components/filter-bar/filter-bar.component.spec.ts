@@ -80,15 +80,15 @@ describe('FilterBarComponent', () => {
   it('hides Property filter group when complexOptions has 2 or fewer entries', async () => {
     const { fixture } = await setup({ complexOptions: COMPLEX_OPTIONS_1 });
     const groups = fixture.nativeElement.querySelectorAll('.filter-group');
-    // Only Bedrooms, Available From, Lease Term, Status — no Property
-    expect(groups.length).toBe(4);
+    // Bedrooms, Available From, Lease Term, Status, Sort — no Property
+    expect(groups.length).toBe(5);
   });
 
   it('shows Property filter group when complexOptions has more than 2 entries', async () => {
     const { fixture } = await setup({ complexOptions: COMPLEX_OPTIONS_3 });
     const groups = fixture.nativeElement.querySelectorAll('.filter-group');
-    // Property + Bedrooms + Available From + Lease Term + Status
-    expect(groups.length).toBe(5);
+    // Property + Bedrooms + Available From + Lease Term + Status + Sort
+    expect(groups.length).toBe(6);
   });
 
   it('emits bedroomChange when bedroom selection changes', async () => {

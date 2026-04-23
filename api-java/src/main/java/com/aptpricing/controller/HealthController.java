@@ -17,8 +17,7 @@ public class HealthController {
 
     @GetMapping("/health")
     public Map<String, Object> health() {
-        // Extract file path from jdbc:sqlite:<path>?mode=ro
-        String dbPath = datasourceUrl.replace("jdbc:sqlite:", "").replaceAll("\\?.*", "");
+        String dbPath = datasourceUrl.replace("jdbc:sqlite:", "");
         boolean dbExists = Files.exists(Path.of(dbPath));
         return Map.of(
                 "status", dbExists ? "ok" : "db_missing",

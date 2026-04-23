@@ -2,6 +2,9 @@
 SPEC.md
 PROGRESS.md
 SKYHOUSE_SPEC.md
+APARTMENT_SEARCH.md
+RENEWAL_NEGOTIATION.md
+queries/negotiation_check.sql
 
 # ── Scraped data (generated, not for repo) ───────────────────────────────────
 data/*.db

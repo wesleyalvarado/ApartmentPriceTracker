@@ -95,18 +95,43 @@ cd frontend && ng serve
 
 ## Manual Refresh Runbook
 
-### Every time you open the dashboard
-
-Always run apartment scrapers to get current pricing before checking the dashboard:
+### Daily — apartment pricing (run all 4 steps in order)
 
 ```bash
+# 1. Refresh Camden base pricing
 cd scraper/camden_greenville && python scraper.py
+
+# 2. Refresh Camden lease-term pricing (must run after step 1)
 cd scraper/camden_greenville && python lease_terms.py
+
+# 3. Refresh SkyHouse base pricing
 cd scraper/skyhouse_dallas && python scraper.py
+
+# 4. Refresh SkyHouse lease-term pricing
 cd scraper/skyhouse_dallas && python lease_terms.py
 ```
 
-**Verify after each refresh:**
+After scraping, check what changed since yesterday:
+
+```bash
+# Day-over-day price + availability diff
+sqlite3 -column -header data/apartments.db < queries/snapshot_diff.sql
+
+# Negotiation check — flags A2R floor price and unit count thresholds
+sqlite3 -column -header data/apartments.db < queries/negotiation_check.sql
+```
+
+**What to look for in the diff output:**
+- `CHANGED` rows with a negative `delta` — prices dropped (good for negotiating)
+- `NEW` rows — a unit just appeared on the market
+- `GONE` rows — a unit was rented or pulled
+
+**What to look for in the negotiation check:**
+- `floor_price` below $1,750 → strengthens renewal ask
+- `units_available` below 4 → weakens leverage (market is tightening)
+- The `negotiation_flag` column will print a warning if either threshold is crossed
+
+**Verify the dashboard after refresh:**
 - [ ] All expected complexes appear (Camden Greenville + SkyHouse Dallas)
 - [ ] Floor plan count looks right per complex (~10–15 plans each)
 - [ ] Price change badges reflect the current lease term filter

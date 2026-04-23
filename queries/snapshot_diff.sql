@@ -1,16 +1,33 @@
--- Compare the two most recent price snapshots.
+-- Compare today's snapshot vs the previous day's snapshot.
+-- "Today" = most recent row per unit on the latest scrape date.
+-- "Prev"  = most recent row per unit on the second-most-recent scrape date.
+-- This prevents intra-day partial scrapes from making units appear GONE.
 -- Usage: sqlite3 data/apartments.db < queries/snapshot_diff.sql
 
-WITH timestamps AS (
-    SELECT DISTINCT scraped_at FROM price_snapshots ORDER BY scraped_at DESC LIMIT 2
+WITH dates AS (
+    SELECT DISTINCT DATE(scraped_at) AS d FROM price_snapshots ORDER BY d DESC LIMIT 2
 ),
-latest_ts AS (SELECT scraped_at FROM timestamps LIMIT 1),
-prev_ts   AS (SELECT scraped_at FROM timestamps LIMIT 1 OFFSET 1),
+latest_date AS (SELECT d FROM dates LIMIT 1),
+prev_date   AS (SELECT d FROM dates LIMIT 1 OFFSET 1),
 latest AS (
-    SELECT * FROM price_snapshots WHERE scraped_at = (SELECT scraped_at FROM latest_ts)
+    SELECT ps.*
+    FROM price_snapshots ps
+    INNER JOIN (
+        SELECT unit_id, MAX(scraped_at) AS best
+        FROM price_snapshots
+        WHERE DATE(scraped_at) = (SELECT d FROM latest_date)
+        GROUP BY unit_id
+    ) best ON ps.unit_id = best.unit_id AND ps.scraped_at = best.best
 ),
 prev AS (
-    SELECT * FROM price_snapshots WHERE scraped_at = (SELECT scraped_at FROM prev_ts)
+    SELECT ps.*
+    FROM price_snapshots ps
+    INNER JOIN (
+        SELECT unit_id, MAX(scraped_at) AS best
+        FROM price_snapshots
+        WHERE DATE(scraped_at) = (SELECT d FROM prev_date)
+        GROUP BY unit_id
+    ) best ON ps.unit_id = best.unit_id AND ps.scraped_at = best.best
 )
 
 SELECT

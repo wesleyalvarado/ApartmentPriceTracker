@@ -229,8 +229,8 @@ def insert_snapshot(conn: sqlite3.Connection, unit: dict, ts: str) -> None:
         log.warning("Skipping unit %s — no valid price", unit.get("unit_id"))
         return
     existing = conn.execute(
-        "SELECT id, price FROM price_snapshots WHERE unit_id=? AND DATE(scraped_at)=DATE(?)",
-        (unit["unit_id"], ts),
+        "SELECT id, price FROM price_snapshots WHERE complex_id=? AND unit_id=? AND DATE(scraped_at)=DATE(?)",
+        (unit.get("complex_id", COMPLEX_ID), unit["unit_id"], ts),
     ).fetchone()
     if existing:
         if existing[1] != unit["price"]:

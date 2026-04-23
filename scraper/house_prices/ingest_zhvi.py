@@ -20,7 +20,7 @@ from urllib.request import urlopen
 from migrate import create_tables
 
 DB_PATH = Path(__file__).resolve().parents[2] / "data" / "apartments.db"
-TARGET_ZIPS = {"75206", "75214", "75238"}
+TARGET_ZIPS = {"75206", "75214", "75238", "75243"}
 
 ZHVI_URLS = {
     "all_middle_tier": "https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv",

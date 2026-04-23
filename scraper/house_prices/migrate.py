@@ -60,7 +60,10 @@ def create_tables(conn: sqlite3.Connection) -> None:
              'Near White Rock Lake, family-oriented'),
             ('75238', 'Lake Highlands',
              'Lake Highlands, White Rock, Forest Hills',
-             'NE Dallas; mix of mid-century ranches and updated homes near White Rock Lake')
+             'NE Dallas; mix of mid-century ranches and updated homes near White Rock Lake'),
+            ('75243', 'Forest Lane / Northwood Hills',
+             'Northwood Hills, Forest Lane, Lake Highlands North',
+             'NE Dallas; established neighborhoods near US-75 and LBJ Freeway')
     """)
     conn.commit()
 
